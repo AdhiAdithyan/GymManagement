@@ -10,6 +10,37 @@
         </a>
     </div>
 
+    <!-- Filters -->
+    <div class="card-body border-bottom">
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label fw-bold small text-uppercase">Status</label>
+                <select name="status" class="form-select">
+                    <option value="">All Statuses</option>
+                    <option value="sent" {% if status_filter=='sent' %}selected{% endif %}>Sent</option>
+                    <option value="failed" {% if status_filter=='failed' %}selected{% endif %}>Failed</option>
+                    <option value="pending" {% if status_filter=='pending' %}selected{% endif %}>Pending</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label fw-bold small text-uppercase">Time Slot</label>
+                <select name="slot" class="form-select">
+                    <option value="">All Slots</option>
+                    <option value="all" {% if slot_filter=='all' %}selected{% endif %}>All Members</option>
+                    {% for slot in time_slots %}
+                    <option value="{{ slot }}" {% if slot_filter==slot %}selected{% endif %}>{{ slot }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">Filter</button>
+            </div>
+            <div class="col-md-2">
+                <a href="{% url 'whatsapp_history' %}" class="btn btn-outline-secondary w-100">Reset</a>
+            </div>
+        </form>
+    </div>
+
     <div class="card-body p-0">
         <div class="table-responsive">
             <table class="table table-hover mb-0 align-middle">
@@ -104,7 +135,8 @@
             <ul class="pagination pagination-sm mb-0 justify-content-center">
                 {% if page_obj.has_previous %}
                 <li class="page-item">
-                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}">
+                    <a class="page-link"
+                        href="?page={{ page_obj.previous_page_number }}&status={{ status_filter }}&slot={{ slot_filter }}">
                         <i class="fas fa-chevron-left"></i>
                     </a>
                 </li>
@@ -114,14 +146,16 @@
                 {% if page_obj.number == num %}
                 <li class="page-item active"><span class="page-link">{{ num }}</span></li>
                 {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %} <li class="page-item">
-                    <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                    <a class="page-link" href="?page={{ num }}&status={{ status_filter }}&slot={{ slot_filter }}">{{ num
+                        }}</a>
                     </li>
                     {% endif %}
                     {% endfor %}
 
                     {% if page_obj.has_next %}
                     <li class="page-item">
-                        <a class="page-link" href="?page={{ page_obj.next_page_number }}">
+                        <a class="page-link"
+                            href="?page={{ page_obj.next_page_number }}&status={{ status_filter }}&slot={{ slot_filter }}">
                             <i class="fas fa-chevron-right"></i>
                         </a>
                     </li>

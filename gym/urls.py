@@ -23,6 +23,7 @@ urlpatterns = [
     path('whatsapp/send/', views.send_whatsapp_message, name='send_whatsapp'),
     path('whatsapp/history/', views.whatsapp_history, name='whatsapp_history'),
     path('members/import-phones/', views.bulk_import_phones, name='bulk_import_phones'),
+    path('branding/', views.branding_settings, name='branding_settings'),
 
     # Member Routes
     path('member/dashboard/', views.member_dashboard, name='member_dashboard'),

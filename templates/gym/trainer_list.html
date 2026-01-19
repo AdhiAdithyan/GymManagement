@@ -3,7 +3,24 @@
 <div class="card shadow-4-strong">
     <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
         <h5 class="mb-0 text-info fw-bold"><i class="fas fa-chalkboard-teacher me-2"></i>Trainer Directory</h5>
-        <button class="btn btn-info btn-rounded text-white"><i class="fas fa-plus me-2"></i> Add New Trainer</button>
+        <div class="d-flex align-items-center">
+            <form method="get" class="me-3">
+                <div class="input-group input-group-sm">
+                    <input type="text" name="search" class="form-control" placeholder="Search trainers..."
+                        value="{{ search_query }}">
+                    <button class="btn btn-info text-white" type="submit">
+                        <i class="fas fa-search"></i>
+                    </button>
+                    {% if search_query %}
+                    <a href="{% url 'trainer_list' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-times"></i>
+                    </a>
+                    {% endif %}
+                </div>
+            </form>
+            <button class="btn btn-info btn-rounded text-white"><i class="fas fa-plus me-2"></i> Add New
+                Trainer</button>
+        </div>
     </div>
     <div class="card-body p-0">
         <div class="table-responsive">
@@ -18,7 +35,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for trainer in trainers %}
+                    {% for trainer in page_obj %}
                     <tr>
                         <td class="ps-4">
                             <div class="d-flex align-items-center">
@@ -56,5 +73,45 @@
             </table>
         </div>
     </div>
+
+    <!-- Pagination -->
+    {% if page_obj.has_other_pages %}
+    <div class="card-footer bg-light">
+        <nav aria-label="Trainer pagination">
+            <ul class="pagination pagination-sm mb-0 justify-content-center">
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}&search={{ search_query }}">
+                        <i class="fas fa-chevron-left"></i>
+                    </a>
+                </li>
+                {% endif %}
+
+                {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %} <li class="page-item">
+                    <a class="page-link" href="?page={{ num }}&search={{ search_query }}">{{ num }}</a>
+                    </li>
+                    {% endif %}
+                    {% endfor %}
+
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}&search={{ search_query }}">
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+            </ul>
+        </nav>
+        <div class="text-center mt-2">
+            <small class="text-muted">
+                Showing {{ page_obj.start_index }} to {{ page_obj.end_index }} of {{ page_obj.paginator.count }}
+                trainers
+            </small>
+        </div>
+    </div>
+    {% endif %}
 </div>
 {% endblock %}

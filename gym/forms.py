@@ -1,5 +1,5 @@
 from django import forms
-from core.models import WorkoutVideo, DietPlan, LeaveRequest, MemberProfile, CustomUser
+from core.models import WorkoutVideo, DietPlan, LeaveRequest, MemberProfile, CustomUser, BrandingConfig
 
 class VideoForm(forms.ModelForm):
     class Meta:
@@ -148,3 +148,15 @@ class BulkPhoneImportForm(forms.Form):
         
         return file
 
+
+class BrandingForm(forms.ModelForm):
+    class Meta:
+        model = BrandingConfig
+        fields = ['app_name', 'primary_color', 'secondary_color', 'accent_color', 'logo']
+        widgets = {
+            'app_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'primary_color': forms.TextInput(attrs={'class': 'form-control', 'type': 'color'}),
+            'secondary_color': forms.TextInput(attrs={'class': 'form-control', 'type': 'color'}),
+            'accent_color': forms.TextInput(attrs={'class': 'form-control', 'type': 'color'}),
+            'logo': forms.FileInput(attrs={'class': 'form-control'}),
+        }

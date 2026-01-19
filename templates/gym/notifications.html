@@ -8,7 +8,7 @@
 <ul class="list-group">
     {% for member in due_members %}
     <li class="list-group-item">
-        <strong>{{ member.user.username }}</strong> - Due: {{ member.next_payment_date }} (${{ member.monthly_amount }})
+        <strong>{{ member.user.username }}</strong> - Due: {{ member.next_payment_date }} (₹{{ member.monthly_amount }})
     </li>
     {% endfor %}
 </ul>

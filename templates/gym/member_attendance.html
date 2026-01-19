@@ -4,6 +4,24 @@
     <div class="card-header bg-white py-3">
         <h5 class="mb-0 text-primary fw-bold"><i class="fas fa-history me-2"></i>My Attendance History</h5>
     </div>
+    <div class="card-body border-bottom">
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label fw-bold small text-uppercase">From Date</label>
+                <input type="date" name="date_from" class="form-control" value="{{ date_from }}">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label fw-bold small text-uppercase">To Date</label>
+                <input type="date" name="date_to" class="form-control" value="{{ date_to }}">
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">Filter</button>
+            </div>
+            <div class="col-md-2">
+                <a href="{% url 'member_attendance' %}" class="btn btn-outline-secondary w-100">Reset</a>
+            </div>
+        </form>
+    </div>
     <div class="card-body p-0">
         <div class="table-responsive">
             <table class="table table-hover mb-0 align-middle">
@@ -16,7 +34,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% regroup attendance_records by date as attendance_by_date %}
+                    {% regroup page_obj by date as attendance_by_date %}
                     {% for date_group in attendance_by_date %}
                     <tr>
                         <td class="ps-4 fw-bold">
@@ -56,19 +74,55 @@
             </table>
         </div>
     </div>
-    {% if attendance_records %}
+
+    <!-- Pagination -->
+    {% if page_obj.has_other_pages %}
+    <div class="card-footer bg-light py-2">
+        <nav aria-label="Attendance pagination">
+            <ul class="pagination pagination-sm mb-0 justify-content-center">
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link"
+                        href="?page={{ page_obj.previous_page_number }}&date_from={{ date_from }}&date_to={{ date_to }}">
+                        <i class="fas fa-chevron-left"></i>
+                    </a>
+                </li>
+                {% endif %}
+
+                {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %} <li class="page-item">
+                    <a class="page-link" href="?page={{ num }}&date_from={{ date_from }}&date_to={{ date_to }}">{{ num
+                        }}</a>
+                    </li>
+                    {% endif %}
+                    {% endfor %}
+
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link"
+                            href="?page={{ page_obj.next_page_number }}&date_from={{ date_from }}&date_to={{ date_to }}">
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+            </ul>
+        </nav>
+    </div>
+    {% endif %}
+
     <div class="card-footer bg-light">
         <div class="row text-center">
             <div class="col-md-6">
-                <h4 class="text-primary">{{ attendance_by_date|length }}</h4>
-                <small class="text-muted">Days Attended</small>
+                <h4 class="text-primary">{{ total_attended }}</h4>
+                <small class="text-muted">Total Days Present</small>
             </div>
             <div class="col-md-6">
-                <h4 class="text-success">{{ attendance_records|length }}</h4>
-                <small class="text-muted">Total Sessions</small>
+                <h4 class="text-success">{{ page_obj.paginator.count }}</h4>
+                <small class="text-muted">Total Sessions Tracked</small>
             </div>
         </div>
     </div>
-    {% endif %}
 </div>
 {% endblock %}

@@ -2,7 +2,25 @@
 {% block content %}
 <div class="card shadow-4-strong">
     <div class="card-header bg-white py-3">
-        <h5 class="mb-0 text-success fw-bold"><i class="fas fa-file-invoice-dollar me-2"></i>Payment History</h5>
+        <h5 class="mb-0 text-success fw-bold"><i class="fas fa-file-invoice me-2"></i>Payment History</h5>
+    </div>
+    <div class="card-body border-bottom">
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label fw-bold small text-uppercase">From Date</label>
+                <input type="date" name="date_from" class="form-control" value="{{ date_from }}">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label fw-bold small text-uppercase">To Date</label>
+                <input type="date" name="date_to" class="form-control" value="{{ date_to }}">
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-success w-100">Filter</button>
+            </div>
+            <div class="col-md-2">
+                <a href="{% url 'member_payments' %}" class="btn btn-outline-secondary w-100">Reset</a>
+            </div>
+        </form>
     </div>
     <div class="card-body p-0">
         <div class="table-responsive">
@@ -16,10 +34,10 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for payment in payments %}
+                    {% for payment in page_obj %}
                     <tr>
                         <td class="ps-4">{{ payment.date }}</td>
-                        <td class="fw-bold text-success">${{ payment.amount }}</td>
+                        <td class="fw-bold text-success">₹{{ payment.amount }}</td>
                         <td><span class="badge bg-secondary">{{ payment.get_payment_type_display }}</span></td>
                         <td>{{ payment.remarks }}</td>
                     </tr>
@@ -32,5 +50,48 @@
             </table>
         </div>
     </div>
+
+    <!-- Pagination -->
+    {% if page_obj.has_other_pages %}
+    <div class="card-footer bg-light">
+        <nav aria-label="Payment pagination">
+            <ul class="pagination pagination-sm mb-0 justify-content-center">
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link"
+                        href="?page={{ page_obj.previous_page_number }}&date_from={{ date_from }}&date_to={{ date_to }}">
+                        <i class="fas fa-chevron-left"></i>
+                    </a>
+                </li>
+                {% endif %}
+
+                {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %} <li class="page-item">
+                    <a class="page-link" href="?page={{ num }}&date_from={{ date_from }}&date_to={{ date_to }}">{{ num
+                        }}</a>
+                    </li>
+                    {% endif %}
+                    {% endfor %}
+
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link"
+                            href="?page={{ page_obj.next_page_number }}&date_from={{ date_from }}&date_to={{ date_to }}">
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+            </ul>
+        </nav>
+        <div class="text-center mt-2">
+            <small class="text-muted">
+                Showing {{ page_obj.start_index }} to {{ page_obj.end_index }} of {{ page_obj.paginator.count }}
+                payments
+            </small>
+        </div>
+    </div>
+    {% endif %}
 </div>
 {% endblock %}

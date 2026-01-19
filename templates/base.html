@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FitLife Gym Manager</title>
+    <title>{{ request.tenant.branding.app_name|default:"FitLife Gym Manager" }}</title>
     <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
     <!-- Google Fonts -->
@@ -14,9 +14,42 @@
 
     <style>
         :root {
-            --primary-color: #3b71ca;
-            --secondary-color: #9fa6b2;
+            --primary-color: {
+                    {
+                    request.tenant.branding.primary_color|default: "#3b71ca"
+                }
+            }
+
+            ;
+
+            --secondary-color: {
+                    {
+                    request.tenant.branding.secondary_color|default: "#9fa6b2"
+                }
+            }
+
+            ;
+
+            --accent-color: {
+                    {
+                    request.tenant.branding.accent_color|default: "#FF5722"
+                }
+            }
+
+            ;
             --glass-bg: rgba(255, 255, 255, 0.9);
+        }
+
+        .bg-primary {
+            background-color: var(--primary-color) !important;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color) !important;
+        }
+
+        .text-primary {
+            color: var(--primary-color) !important;
         }
 
         body {
@@ -131,9 +164,14 @@
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top">
         <div class="container-fluid">
             <a class="navbar-brand fw-bold" href="{% url 'dashboard' %}">
+                {% if request.tenant.branding.logo %}
+                <img src="{{ request.tenant.branding.logo.url }}" height="40" alt="Logo" class="rounded-circle me-2"
+                    style="border: 2px solid white; object-fit: cover;">
+                {% else %}
                 <img src="/static/era_logo_mark.jpg" height="40" alt="ERA Logo" class="rounded-circle me-2"
                     style="border: 2px solid white;">
-                ERA Fitness Studio
+                {% endif %}
+                {{ request.tenant.branding.app_name|default:"ERA Fitness Studio" }}
             </a>
             <button class="navbar-toggler" type="button" data-mdb-collapse-init data-mdb-target="#navbarNav"
                 aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
@@ -153,6 +191,13 @@
                                 class="fas fa-bell me-1"></i> Alerts</a></li>
                     <li class="nav-item"><a class="nav-link" href="{% url 'chat_room' 'general' %}"><i
                                 class="fas fa-comments me-1"></i> Chat</a></li>
+                    {% endif %}
+                    {% if user.role == 'admin' or user.role == 'tenant_admin' %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'branding_settings' %}">
+                            <i class="fas fa-paint-brush me-1"></i> Branding
+                        </a>
+                    </li>
                     {% endif %}
                     <li class="nav-item">
                         <form action="{% url 'logout' %}" method="post" class="d-inline">

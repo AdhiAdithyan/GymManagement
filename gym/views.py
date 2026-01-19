@@ -80,19 +80,72 @@ def member_dashboard(request):
 @login_required
 def member_attendance_history(request):
     member = request.user.member_profile
-    attendance_records = Attendance.objects.filter(member=member).order_by('-date')
-    return render(request, 'gym/member_attendance.html', {'attendance_records': attendance_records})
+    date_from = request.GET.get('date_from', '')
+    date_to = request.GET.get('date_to', '')
+    
+    attendance_records = Attendance.objects.filter(member=member).order_by('-date', '-check_in_time')
+    
+    if date_from:
+        attendance_records = attendance_records.filter(date__gte=date_from)
+    if date_to:
+        attendance_records = attendance_records.filter(date__lte=date_to)
+        
+    paginator = Paginator(attendance_records, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    context = {
+        'page_obj': page_obj,
+        'date_from': date_from,
+        'date_to': date_to,
+        'total_attended': Attendance.objects.filter(member=member, status='Present').count()
+    }
+    return render(request, 'gym/member_attendance.html', context)
 
 @login_required
 def member_payment_history(request):
     member = request.user.member_profile
+    date_from = request.GET.get('date_from', '')
+    date_to = request.GET.get('date_to', '')
+    
     payments = Payment.objects.filter(member=member).order_by('-date')
-    return render(request, 'gym/member_payments.html', {'payments': payments})
+    
+    if date_from:
+        payments = payments.filter(date__gte=date_from)
+    if date_to:
+        payments = payments.filter(date__lte=date_to)
+        
+    paginator = Paginator(payments, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    context = {
+        'page_obj': page_obj,
+        'date_from': date_from,
+        'date_to': date_to,
+    }
+    return render(request, 'gym/member_payments.html', context)
 
 @login_required
 def member_video_list(request):
+    search_query = request.GET.get('search', '')
     videos = WorkoutVideo.objects.all().order_by('-uploaded_at')
-    return render(request, 'gym/member_videos.html', {'videos': videos})
+    
+    if search_query:
+        videos = videos.filter(
+            Q(title__icontains=search_query) |
+            Q(description__icontains=search_query)
+        )
+        
+    paginator = Paginator(videos, 6) # 6 videos per page for better layout
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    context = {
+        'page_obj': page_obj,
+        'search_query': search_query,
+    }
+    return render(request, 'gym/member_videos.html', context)
 
 @login_required
 def member_diet_view(request):
@@ -133,10 +186,10 @@ def member_list(request):
     # Apply filters
     if search_query:
         members = members.filter(
-            models.Q(user__username__icontains=search_query) |
-            models.Q(user__email__icontains=search_query) |
-            models.Q(user__first_name__icontains=search_query) |
-            models.Q(user__last_name__icontains=search_query)
+            Q(user__username__icontains=search_query) |
+            Q(user__email__icontains=search_query) |
+            Q(user__first_name__icontains=search_query) |
+            Q(user__last_name__icontains=search_query)
         )
     
     if membership_filter:
@@ -300,16 +353,34 @@ def mark_attendance(request):
 
 @login_required
 def finance_overview(request):
-    expenses = Expense.objects.all().order_by('-date')
+    if request.user.role not in ['admin', 'tenant_admin', 'super_admin']:
+        return redirect('dashboard')
+        
+    date_from = request.GET.get('date_from', '')
+    date_to = request.GET.get('date_to', '')
+    
+    expenses_all = Expense.objects.all().order_by('-date')
+    
+    if date_from:
+        expenses_all = expenses_all.filter(date__gte=date_from)
+    if date_to:
+        expenses_all = expenses_all.filter(date__lte=date_to)
+        
     income = Payment.objects.aggregate(Sum('amount'))['amount__sum'] or 0
-    expense_total = expenses.aggregate(Sum('amount'))['amount__sum'] or 0
+    expense_total = expenses_all.aggregate(Sum('amount'))['amount__sum'] or 0
     profit = income - expense_total
     
+    paginator = Paginator(expenses_all, 15)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
     context = {
-        'expenses': expenses,
+        'page_obj': page_obj,
         'income': income,
         'expense_total': expense_total,
-        'profit': profit
+        'profit': profit,
+        'date_from': date_from,
+        'date_to': date_to,
     }
     return render(request, 'gym/finance.html', context)
 
@@ -343,8 +414,30 @@ def trainer_attendance_view(request):
     if request.user.role not in ['trainer', 'admin', 'tenant_admin', 'super_admin']:
         return redirect('dashboard')
     
+    search_query = request.GET.get('search', '')
+    date_query = request.GET.get('date', '')
+    
     attendance_records = Attendance.objects.select_related('member__user').order_by('-date', '-check_in_time')
-    return render(request, 'gym/attendance_list.html', {'attendance_records': attendance_records})
+    
+    if search_query:
+        attendance_records = attendance_records.filter(
+            Q(member__user__username__icontains=search_query) |
+            Q(member__user__email__icontains=search_query)
+        )
+    
+    if date_query:
+        attendance_records = attendance_records.filter(date=date_query)
+        
+    paginator = Paginator(attendance_records, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    context = {
+        'page_obj': page_obj,
+        'search_query': search_query,
+        'date_query': date_query,
+    }
+    return render(request, 'gym/attendance_list.html', context)
 
 @login_required
 def upload_video(request):
@@ -380,12 +473,29 @@ def create_diet_plan(request):
 
 @login_required
 def trainer_list(request):
-    # Only admin should see this or maybe all? Let's allow admin for now.
     if request.user.role not in ['admin', 'tenant_admin', 'super_admin']:
         return redirect('dashboard')
     
-    trainers = CustomUser.objects.filter(role='trainer')
-    return render(request, 'gym/trainer_list.html', {'trainers': trainers})
+    search_query = request.GET.get('search', '')
+    trainers = CustomUser.objects.filter(role='trainer').order_by('username')
+    
+    if search_query:
+        trainers = trainers.filter(
+            Q(username__icontains=search_query) |
+            Q(email__icontains=search_query) |
+            Q(first_name__icontains=search_query) |
+            Q(last_name__icontains=search_query)
+        )
+    
+    paginator = Paginator(trainers, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    context = {
+        'page_obj': page_obj,
+        'search_query': search_query,
+    }
+    return render(request, 'gym/trainer_list.html', context)
 
 @login_required
 def leave_request_list(request):
@@ -509,7 +619,15 @@ def whatsapp_history(request):
     
     from core.models import WhatsAppMessage
     
+    status_filter = request.GET.get('status', '')
+    slot_filter = request.GET.get('slot', '')
+    
     messages_list = WhatsAppMessage.objects.all().select_related('sent_by').order_by('-sent_at')
+    
+    if status_filter:
+        messages_list = messages_list.filter(status=status_filter)
+    if slot_filter:
+        messages_list = messages_list.filter(time_slot=slot_filter)
     
     # Pagination
     paginator = Paginator(messages_list, 20)
@@ -518,6 +636,9 @@ def whatsapp_history(request):
     
     context = {
         'page_obj': page_obj,
+        'status_filter': status_filter,
+        'slot_filter': slot_filter,
+        'time_slots': MemberProfile.objects.values_list('allotted_slot', flat=True).distinct().order_by('allotted_slot')
     }
     return render(request, 'gym/whatsapp_history.html', context)
 
@@ -611,3 +732,27 @@ def bulk_import_phones(request):
     }
     return render(request, 'gym/bulk_import_phones.html', context)
 
+
+@login_required
+def branding_settings(request):
+    """Manage tenant branding settings"""
+    if request.user.role not in ['admin', 'tenant_admin', 'super_admin']:
+        messages.error(request, 'You do not have permission to access branding settings.')
+        return redirect('dashboard')
+    
+    from .forms import BrandingForm
+    from core.models import BrandingConfig
+    
+    tenant = request.user.tenant
+    branding, created = BrandingConfig.objects.get_or_create(tenant=tenant)
+    
+    if request.method == 'POST':
+        form = BrandingForm(request.POST, request.FILES, instance=branding)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Branding settings updated successfully!')
+            return redirect('branding_settings')
+    else:
+        form = BrandingForm(instance=branding)
+    
+    return render(request, 'gym/branding_settings.html', {'form': form, 'branding': branding})

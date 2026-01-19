@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow-4-strong">
+            <div class="card-header bg-primary text-white py-3">
+                <h5 class="mb-0 fw-bold"><i class="fas fa-paint-brush me-2"></i>Branding & Theme Settings</h5>
+            </div>
+            <div class="card-body p-4">
+                <p class="text-muted mb-4">Customize the appearance of your gym's portal. These colors will be applied
+                    across all pages for your members and staff.</p>
+
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Gym Name</label>
+                        {{ form.app_name }}
+                        <div class="form-text">This name will appear in the navigation bar and page titles.</div>
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Primary Color</label>
+                            {{ form.primary_color }}
+                            <div class="form-text">Used for buttons, headers, and primary accents.</div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Secondary Color</label>
+                            {{ form.secondary_color }}
+                            <div class="form-text">Used for secondary accents and badges.</div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Accent Color</label>
+                            {{ form.accent_color }}
+                            <div class="form-text">Used for highlights and call-to-action elements.</div>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Gym Logo</label>
+                        {{ form.logo }}
+                        {% if branding.logo %}
+                        <div class="mt-2 text-center p-3 bg-light rounded border">
+                            <p class="small text-muted mb-2">Current Logo Preview:</p>
+                            <img src="{{ branding.logo.url }}" alt="Logo Preview" style="max-height: 80px;">
+                        </div>
+                        {% endif %}
+                        <div class="form-text">Upload a logo with a transparent background for best results.</div>
+                    </div>
+
+                    <div class="d-grid gap-2 mt-4">
+                        <button type="submit" class="btn btn-primary btn-lg">Save Changes</button>
+                        <a href="{% url 'dashboard' %}" class="btn btn-light">Back to Dashboard</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Preview Section -->
+        <div class="card mt-4 shadow-2-strong">
+            <div class="card-header py-3">
+                <h6 class="mb-0 fw-bold">Live Theme Preview</h6>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="p-3 rounded border" style="border-color: var(--primary-color) !important;">
+                            <h6 style="color: var(--primary-color);">Primary Color Text</h6>
+                            <button class="btn w-100 mb-2"
+                                style="background-color: var(--primary-color); color: white;">Primary Button</button>
+                            <span class="badge" style="background-color: var(--primary-color);">Primary Badge</span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="p-3 rounded border" style="border-color: var(--secondary-color) !important;">
+                            <h6 style="color: var(--secondary-color);">Secondary Color Text</h6>
+                            <button class="btn w-100 mb-2"
+                                style="background-color: var(--secondary-color); color: white;">Secondary
+                                Button</button>
+                            <span class="badge" style="background-color: var(--secondary-color);">Secondary Badge</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Real-time preview bit
+    const primaryInput = document.querySelector('input[name="primary_color"]');
+    const secondaryInput = document.querySelector('input[name="secondary_color"]');
+
+    primaryInput.addEventListener('input', (e) => {
+        document.documentElement.style.setProperty('--primary-color', e.target.value);
+    });
+
+    secondaryInput.addEventListener('input', (e) => {
+        document.documentElement.style.setProperty('--secondary-color', e.target.value);
+    });
+</script>
+{% endblock %}
