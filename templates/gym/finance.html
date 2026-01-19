@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Finance Overview</h2>
+<div class="row">
+    <div class="col-md-4">
+        <div class="alert alert-success">Income: ${{ income }}</div>
+    </div>
+    <div class="col-md-4">
+        <div class="alert alert-danger">Expenses: ${{ expense_total }}</div>
+    </div>
+    <div class="col-md-4">
+        <div class="alert alert-info">Profit: ${{ profit }}</div>
+    </div>
+</div>
+
+<h3>Expenses</h3>
+<ul class="list-group">
+    {% for expense in expenses %}
+    <li class="list-group-item">{{ expense.date }} - {{ expense.category }}: ${{ expense.amount }}</li>
+    {% endfor %}
+</ul>
+{% endblock %}

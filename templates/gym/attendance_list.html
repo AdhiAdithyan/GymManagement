@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <h2 class="text-primary fw-bold">Member Attendance</h2>
+    </div>
+</div>
+
+<div class="card shadow-4-strong">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="bg-light">
+                    <tr>
+                        <th scope="col">Member</th>
+                        <th scope="col">Date</th>
+                        <th scope="col">Check-in Time</th>
+                        <th scope="col">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for record in attendance_records %}
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="ms-3">
+                                    <p class="fw-bold mb-1">{{ record.member.user.username }}</p>
+                                    <p class="text-muted mb-0">{{ record.member.membership_type }}</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td>{{ record.date }}</td>
+                        <td>{{ record.check_in_time }}</td>
+                        <td>
+                            <span
+                                class="badge rounded-pill d-inline 
+                                {% if record.status == 'Present' %}bg-success{% else %}bg-warning text-dark{% endif %}">
+                                {{ record.status }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="text-center text-muted py-4">No attendance records found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

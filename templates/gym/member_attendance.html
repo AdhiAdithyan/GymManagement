@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="card shadow-4-strong">
+    <div class="card-header bg-white py-3">
+        <h5 class="mb-0 text-primary fw-bold"><i class="fas fa-history me-2"></i>My Attendance History</h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0 align-middle">
+                <thead class="bg-light">
+                    <tr>
+                        <th class="ps-4">Date</th>
+                        <th>Check-in Times</th>
+                        <th>Total Sessions</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% regroup attendance_records by date as attendance_by_date %}
+                    {% for date_group in attendance_by_date %}
+                    <tr>
+                        <td class="ps-4 fw-bold">
+                            <div>{{ date_group.grouper|date:"F d, Y" }}</div>
+                            <small class="text-muted">{{ date_group.grouper|date:"l" }}</small>
+                        </td>
+                        <td>
+                            <div class="d-flex flex-wrap gap-2">
+                                {% for record in date_group.list %}
+                                <span class="badge bg-primary">
+                                    <i class="fas fa-clock me-1"></i>{{ record.check_in_time|time:"h:i A" }}
+                                </span>
+                                {% endfor %}
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge bg-info">
+                                {{ date_group.list|length }} session{{ date_group.list|length|pluralize }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge rounded-pill bg-success">
+                                <i class="fas fa-check-circle me-1"></i>Present
+                            </span>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="text-center py-5">
+                            <i class="fas fa-calendar-times fa-3x text-muted mb-3 d-block"></i>
+                            <p class="text-muted">No attendance records found.</p>
+                            <small class="text-muted">Your attendance will appear here once you check in.</small>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% if attendance_records %}
+    <div class="card-footer bg-light">
+        <div class="row text-center">
+            <div class="col-md-6">
+                <h4 class="text-primary">{{ attendance_by_date|length }}</h4>
+                <small class="text-muted">Days Attended</small>
+            </div>
+            <div class="col-md-6">
+                <h4 class="text-success">{{ attendance_records|length }}</h4>
+                <small class="text-muted">Total Sessions</small>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

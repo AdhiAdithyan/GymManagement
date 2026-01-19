@@ -1,0 +1,143 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="card shadow-4-strong">
+    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+        <h5 class="mb-0 text-warning fw-bold"><i class="fas fa-clipboard-list me-2"></i>Leave Requests</h5>
+    </div>
+    <div class="card-body">
+        <!-- Filters -->
+        <form method="get" class="row g-3 mb-4 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label fw-bold small text-uppercase">Status</label>
+                <select name="status" class="form-select">
+                    <option value="">All Statuses</option>
+                    <option value="Pending" {% if status_filter == 'Pending' %}selected{% endif %}>Pending</option>
+                    <option value="Approved" {% if status_filter == 'Approved' %}selected{% endif %}>Approved</option>
+                    <option value="Rejected" {% if status_filter == 'Rejected' %}selected{% endif %}>Rejected</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label fw-bold small text-uppercase">Date</label>
+                <input type="date" name="date" class="form-control" value="{{ date_filter }}">
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">Filter</button>
+            </div>
+            <div class="col-md-2">
+                <a href="{% url 'leave_request_list' %}" class="btn btn-outline-secondary w-100">Reset</a>
+            </div>
+        </form>
+
+        <!-- Table -->
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="bg-light">
+                    <tr>
+                        <th class="ps-3">Member</th>
+                        <th>Period</th>
+                        <th>Days</th>
+                        <th>Reason</th>
+                        <th>Status</th>
+                        <th>Actioned By</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for forleave in page_obj %}
+                    <tr>
+                        <td class="ps-3 fw-bold">{{ forleave.member.user.username }}</td>
+                        <td>
+                            {{ forleave.start_date|date:"M d" }} - {{ forleave.end_date|date:"M d, Y" }}
+                        </td>
+                        <td>
+                            {# Simple day calc if needed, or just relying on dates #}
+                            <span class="text-muted small">
+                                {{ forleave.end_date|timeuntil:forleave.start_date }}
+                            </span>
+                        </td>
+                        <td>
+                            <button type="button" class="btn btn-sm btn-link text-decoration-none"
+                                data-bs-toggle="tooltip" title="{{ forleave.reason }}">
+                                {{ forleave.reason|truncatechars:30 }}
+                            </button>
+                        </td>
+                        <td>
+                            <span class="badge rounded-pill 
+                                {% if forleave.status == 'Approved' %}bg-success
+                                {% elif forleave.status == 'Rejected' %}bg-danger
+                                {% else %}bg-warning text-dark{% endif %}">
+                                {{ forleave.status }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if forleave.approved_by %}
+                            <span class="small text-muted">{{ forleave.approved_by.username }}</span>
+                            {% else %}
+                            -
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if forleave.status == 'Pending' %}
+                            <form action="{% url 'leave_request_action' forleave.id %}" method="post" class="d-inline">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="approve">
+                                <button type="submit" class="btn btn-sm btn-success btn-rounded" title="Approve">
+                                    <i class="fas fa-check"></i>
+                                </button>
+                            </form>
+                            <form action="{% url 'leave_request_action' forleave.id %}" method="post" class="d-inline">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="reject">
+                                <button type="submit" class="btn btn-sm btn-danger btn-rounded" title="Reject">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </form>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center py-5 text-muted">No leave requests found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if page_obj.has_other_pages %}
+        <nav aria-label="Page navigation" class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link"
+                        href="?page={{ page_obj.previous_page_number }}&status={{ status_filter }}&date={{ date_filter }}">Previous</a>
+                </li>
+                {% else %}
+                <li class="page-item disabled"><span class="page-link">Previous</span></li>
+                {% endif %}
+
+                {% for i in page_obj.paginator.page_range %}
+                {% if page_obj.number == i %}
+                <li class="page-item active"><span class="page-link">{{ i }}</span></li>
+                {% else %}
+                <li class="page-item"><a class="page-link"
+                        href="?page={{ i }}&status={{ status_filter }}&date={{ date_filter }}">{{ i }}</a></li>
+                {% endif %}
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link"
+                        href="?page={{ page_obj.next_page_number }}&status={{ status_filter }}&date={{ date_filter }}">Next</a>
+                </li>
+                {% else %}
+                <li class="page-item disabled"><span class="page-link">Next</span></li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

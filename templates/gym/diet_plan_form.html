@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow-4-strong">
+            <div class="card-header bg-success text-white py-3">
+                <h5 class="mb-0 fw-bold"><i class="fas fa-utensils me-2"></i> Create Diet Plan</h5>
+            </div>
+            <div class="card-body p-4">
+                <form method="post">
+                    {% csrf_token %}
+
+                    <div class="mb-3">
+                        <label for="{{ form.member.id_for_label }}" class="form-label fw-bold">Select Member</label>
+                        {{ form.member }}
+                        {% if form.member.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ form.member.errors }}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.title.id_for_label }}" class="form-label fw-bold">Plan Title</label>
+                        {{ form.title }}
+                        {% if form.title.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ form.title.errors }}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.content.id_for_label }}" class="form-label fw-bold">Diet Plan
+                            Details</label>
+                        {{ form.content }}
+                        <div class="form-text">Describe breakfast, lunch, dinner, and snacks.</div>
+                        {% if form.content.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ form.content.errors }}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-success btn-lg">Assign Diet Plan</button>
+                        <a href="{% url 'dashboard' %}" class="btn btn-light btn-lg">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

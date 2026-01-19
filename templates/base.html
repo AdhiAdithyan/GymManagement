@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FitLife Gym Manager</title>
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" rel="stylesheet" />
+    <!-- MDB -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/7.1.0/mdb.min.css" rel="stylesheet" />
+
+    <style>
+        :root {
+            --primary-color: #3b71ca;
+            --secondary-color: #9fa6b2;
+            --glass-bg: rgba(255, 255, 255, 0.9);
+        }
+
+        body {
+            /* Fallback */
+            background-color: #1a1a1a;
+            /* Overlay + Image */
+            background-image: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.9)), url('/static/gym_bg_custom.jpg');
+            background-repeat: no-repeat;
+            background-position: center center;
+            background-size: cover;
+            /* Fills screen, cropping only sides/bottom if needed */
+            background-attachment: fixed;
+            min-height: 100vh;
+            font-family: 'Roboto', sans-serif;
+            color: #fff;
+        }
+
+        /* Glassmorphism Navbar */
+        .navbar {
+            backdrop-filter: blur(15px);
+            background-color: rgba(0, 0, 0, 0.3) !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Mirror/Glass Cards */
+        .card {
+            border-radius: 16px;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            color: white;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        .card-header {
+            background: rgba(255, 255, 255, 0.05) !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            color: white !important;
+        }
+
+        .text-muted {
+            color: #ddd !important;
+        }
+
+        /* Table overrides for dark mode */
+        .table {
+            color: white;
+        }
+
+        .table tbody tr {
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.3);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Smooth Transitions */
+        .btn {
+            border-radius: 10px;
+            text-transform: none;
+            font-weight: 500;
+            padding: 10px 20px;
+            transition: all 0.3s;
+        }
+
+        .btn-floating {
+            border-radius: 50%;
+        }
+
+        /* Chat Interface Styles */
+        .chat-bubble {
+            border-radius: 20px;
+            padding: 10px 15px;
+            margin-bottom: 5px;
+            display: inline-block;
+            max-width: 80%;
+        }
+
+        .chat-sent {
+            background-color: #3b71ca;
+            color: white;
+            float: right;
+            clear: both;
+            border-bottom-right-radius: 0;
+        }
+
+        .chat-received {
+            background-color: rgba(255, 255, 255, 0.2);
+            color: white;
+            float: left;
+            clear: both;
+            border-bottom-left-radius: 0;
+        }
+
+        /* Mobile Bottom Nav (Optional for future) */
+        @media (max-width: 768px) {
+            .container {
+                padding-bottom: 80px;
+                /* Space for potentially fixed elements */
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top">
+        <div class="container-fluid">
+            <a class="navbar-brand fw-bold" href="{% url 'dashboard' %}">
+                <img src="/static/era_logo_mark.jpg" height="40" alt="ERA Logo" class="rounded-circle me-2"
+                    style="border: 2px solid white;">
+                ERA Fitness Studio
+            </a>
+            <button class="navbar-toggler" type="button" data-mdb-collapse-init data-mdb-target="#navbarNav"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    {% if user.is_authenticated %}
+                    <li class="nav-item"><a class="nav-link" href="{% url 'dashboard' %}"><i
+                                class="fas fa-tachometer-alt me-1"></i> Dashboard</a></li>
+                    {% if user.role != 'member' %}
+                    <li class="nav-item"><a class="nav-link" href="{% url 'member_list' %}"><i
+                                class="fas fa-users me-1"></i> Members</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'finance' %}"><i
+                                class="fas fa-wallet me-1"></i> Finance</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'notifications' %}"><i
+                                class="fas fa-bell me-1"></i> Alerts</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'chat_room' 'general' %}"><i
+                                class="fas fa-comments me-1"></i> Chat</a></li>
+                    {% endif %}
+                    <li class="nav-item">
+                        <form action="{% url 'logout' %}" method="post" class="d-inline">
+                            {% csrf_token %}
+                            <button type="submit" class="nav-link btn btn-link text-white text-decoration-none"
+                                style="box-shadow: none;">
+                                <i class="fas fa-sign-out-alt me-1"></i> Logout
+                            </button>
+                        </form>
+                    </li>
+                    {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'login' %}">Login</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-5">
+        {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-2-strong" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-mdb-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endfor %}
+        {% endif %}
+
+        {% block content %}
+        {% endblock %}
+    </div>
+
+    <!-- MDB -->
+    <script type="text/javascript"
+        src="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/7.1.0/mdb.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    {% block scripts %}{% endblock %}
+</body>
+
+</html>

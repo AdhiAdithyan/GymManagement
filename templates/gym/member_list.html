@@ -1,0 +1,165 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="card shadow-4-strong">
+    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+        <h5 class="mb-0 text-primary fw-bold"><i class="fas fa-users me-2"></i>Member Directory</h5>
+        <div>
+            <a href="{% url 'bulk_import_phones' %}" class="btn btn-info btn-rounded me-2">
+                <i class="fas fa-file-upload me-2"></i>Import Phones
+            </a>
+            <a href="{% url 'add_member' %}" class="btn btn-success btn-rounded">
+                <i class="fas fa-plus me-2"></i>Add New Member
+            </a>
+        </div>
+    </div>
+
+    <!-- Filters Section -->
+    <div class="card-body border-bottom">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <input type="text" name="search" class="form-control" placeholder="Search by name or email..."
+                    value="{{ search_query }}">
+            </div>
+            <div class="col-md-3">
+                <select name="membership" class="form-select">
+                    <option value="">All Memberships</option>
+                    {% for value, label in membership_choices %}
+                    <option value="{{ value }}" {% if membership_filter == value %}selected{% endif %}>{{ label }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select name="payment_status" class="form-select">
+                    <option value="">All Payment Status</option>
+                    <option value="due" {% if payment_status == 'due' %}selected{% endif %}>Payment Due</option>
+                    <option value="upcoming" {% if payment_status == 'upcoming' %}selected{% endif %}>Due Soon (7 days)
+                    </option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100"><i class="fas fa-search me-1"></i> Filter</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0 align-middle">
+                <thead class="bg-light">
+                    <tr>
+                        <th class="ps-4">Member</th>
+                        <th>Membership</th>
+                        <th>Status</th>
+                        <th>Next Due</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for member in page_obj %}
+                    <tr>
+                        <td class="ps-4">
+                            <div class="d-flex align-items-center">
+                                <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center text-white me-3"
+                                    style="width: 45px; height: 45px;">
+                                    {% if member.image %}
+                                    <img src="{{ member.image.url }}" class="rounded-circle"
+                                        style="width: 45px; height: 45px; object-fit: cover;">
+                                    {% else %}
+                                    {{ member.user.username|slice:":1"|upper }}
+                                    {% endif %}
+                                </div>
+                                <div>
+                                    <p class="fw-bold mb-1">{{ member.user.username }} </p>
+                                    <p class="text-muted mb-0 small">{{ member.user.email }}</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge bg-info">{{ member.get_membership_type_display }}</span>
+                        </td>
+                        <td>
+                            {% if member.next_payment_date %}
+                            {% now "Y-m-d" as today %}
+                            {% if member.next_payment_date|date:"Y-m-d" <= today %} <span class="badge bg-danger">
+                                Overdue</span>
+                                {% else %}
+                                <span class="badge bg-success">Active</span>
+                                {% endif %}
+                                {% else %}
+                                <span class="badge bg-secondary">N/A</span>
+                                {% endif %}
+                        </td>
+                        <td>{{ member.next_payment_date|date:"M d, Y"|default:"N/A" }}</td>
+                        <td>
+                            <div class="btn-group" role="group">
+                                <a href="{% url 'edit_member' member.id %}" class="btn btn-sm btn-outline-primary"
+                                    title="Edit Member">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="{% url 'delete_member' member.id %}" class="btn btn-sm btn-outline-danger"
+                                    title="Delete Member"
+                                    onclick="return confirm('Are you sure you want to delete {{ member.user.username }}?');">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center py-4">
+                            <i class="fas fa-search fa-2x text-muted mb-2 d-block"></i>
+                            <p class="text-muted">No members found matching your filters.</p>
+                            <a href="{% url 'member_list' %}" class="btn btn-sm btn-outline-primary">Clear Filters</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if page_obj.has_other_pages %}
+    <div class="card-footer bg-light">
+        <nav aria-label="Member pagination">
+            <ul class="pagination pagination-sm mb-0 justify-content-center">
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link"
+                        href="?page={{ page_obj.previous_page_number }}&search={{ search_query }}&membership={{ membership_filter }}&payment_status={{ payment_status }}">
+                        <i class="fas fa-chevron-left"></i>
+                    </a>
+                </li>
+                {% endif %}
+
+                {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %} <li class="page-item">
+                    <a class="page-link"
+                        href="?page={{ num }}&search={{ search_query }}&membership={{ membership_filter }}&payment_status={{ payment_status }}">{{
+                        num }}</a>
+                    </li>
+                    {% endif %}
+                    {% endfor %}
+
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link"
+                            href="?page={{ page_obj.next_page_number }}&search={{ search_query }}&membership={{ membership_filter }}&payment_status={{ payment_status }}">
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+            </ul>
+        </nav>
+        <div class="text-center mt-2">
+            <small class="text-muted">
+                Showing {{ page_obj.start_index }} to {{ page_obj.end_index }} of {{ page_obj.paginator.count }} members
+            </small>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2 class="text-danger fw-bold mb-4"><i class="fas fa-play-circle me-2"></i>Workout Videos</h2>
+<div class="row">
+    {% for video in videos %}
+    <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card h-100 shadow-4-strong">
+            <!-- Mock Thumbnail -->
+            <div class="bg-dark text-white d-flex align-items-center justify-content-center" style="height: 200px;">
+                <i class="fas fa-play fa-3x"></i>
+            </div>
+            <div class="card-body">
+                <h5 class="card-title fw-bold">{{ video.title }}</h5>
+                <p class="card-text text-muted small">{{ video.description|truncatewords:20 }}</p>
+                <div class="d-flex justify-content-between align-items-center mt-3">
+                    <span class="badge bg-info text-dark">{{ video.get_target_audience_display }}</span>
+                    <a href="{{ video.video_file.url }}" class="btn btn-outline-danger btn-sm" target="_blank">Watch
+                        Now</a>
+                </div>
+            </div>
+            <div class="card-footer bg-white text-muted small">
+                Uploaded: {{ video.uploaded_at|date:"M d, Y" }}
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12 text-center text-muted py-5">
+        <h4>No videos available yet.</h4>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

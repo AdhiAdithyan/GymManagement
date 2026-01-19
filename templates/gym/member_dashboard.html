@@ -1,0 +1,152 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    .dashboard-tile {
+        transition: transform 0.2s, box-shadow 0.2s;
+        cursor: pointer;
+        text-decoration: none;
+        color: inherit;
+        display: block;
+        height: 100%;
+    }
+
+    .dashboard-tile:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        text-decoration: none;
+        color: inherit;
+    }
+
+    .tile-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+    }
+</style>
+
+<div class="row mb-4">
+    <div class="col-md-12">
+        <h2 class="text-primary fw-bold">Welcome, {{ member.user.username }}</h2>
+        <p class="text-muted">Membership: <span class="badge bg-info text-dark">{{ member.membership_type }}</span></p>
+    </div>
+</div>
+
+<!-- Alert Section -->
+{% if show_payment_alert %}
+<div class="alert alert-danger shadow-sm border-danger" role="alert">
+    <div class="d-flex align-items-center">
+        <i class="fas fa-exclamation-circle fa-2x me-3"></i>
+        <div>
+            <h5 class="alert-heading fw-bold mb-1">Payment Reminder!</h5>
+            <p class="mb-0">Your next payment is due in <strong>{{ days_until_due }} days</strong> ({{
+                member.next_payment_date }}). Please pay soon to avoid interruption.</p>
+        </div>
+        <a href="#" class="btn btn-danger ms-auto btn-sm">Pay Now</a>
+    </div>
+</div>
+{% endif %}
+
+<!-- Stats Row -->
+<div class="row mb-5">
+    <div class="col-xl-4 col-md-6 mb-4">
+        <div class="card border-start border-4 border-success h-100 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="text-uppercase fw-bold text-success mb-1">Total Attendance</div>
+                        <div class="h3 mb-0 fw-bold text-gray-800">{{ total_attendance }} Days</div>
+                    </div>
+                    <div class="bg-success bg-opacity-10 rounded-circle p-3 text-success">
+                        <i class="fas fa-calendar-check fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-4 col-md-6 mb-4">
+        <div class="card border-start border-4 border-warning h-100 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="text-uppercase fw-bold text-warning mb-1">Next Payment</div>
+                        <div class="h4 mb-0 fw-bold text-gray-800">{{ member.next_payment_date }}</div>
+                    </div>
+                    <div class="bg-warning bg-opacity-10 rounded-circle p-3 text-warning">
+                        <i class="fas fa-clock fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<h4 class="mb-3 text-muted fw-bold text-uppercase small">My Dashboard</h4>
+<div class="row">
+    <!-- Attendance Tile -->
+    <div class="col-lg-4 col-md-6 mb-4">
+        <a href="{% url 'member_attendance' %}" class="card shadow-4-strong dashboard-tile text-center p-4">
+            <div class="text-primary tile-icon">
+                <i class="fas fa-calendar-alt"></i>
+            </div>
+            <h5 class="fw-bold">My Attendance</h5>
+            <p class="text-muted small mb-0">View your check-in history</p>
+        </a>
+    </div>
+
+    <!-- Payments Tile -->
+    <div class="col-lg-4 col-md-6 mb-4">
+        <a href="{% url 'member_payments' %}" class="card shadow-4-strong dashboard-tile text-center p-4">
+            <div class="text-success tile-icon">
+                <i class="fas fa-file-invoice"></i>
+            </div>
+            <h5 class="fw-bold">Payments</h5>
+            <p class="text-muted small mb-0">View payment history & dues</p>
+        </a>
+    </div>
+
+    <!-- Videos Tile -->
+    <div class="col-lg-4 col-md-6 mb-4">
+        <a href="{% url 'member_videos' %}" class="card shadow-4-strong dashboard-tile text-center p-4">
+            <div class="text-danger tile-icon">
+                <i class="fas fa-play-circle"></i>
+            </div>
+            <h5 class="fw-bold">Workout Videos</h5>
+            <p class="text-muted small mb-0">Watch training content</p>
+        </a>
+    </div>
+
+    <!-- Diet Plan Tile -->
+    <div class="col-lg-4 col-md-6 mb-4">
+        <a href="{% url 'member_diet' %}" class="card shadow-4-strong dashboard-tile text-center p-4">
+            <div class="text-info tile-icon">
+                <i class="fas fa-apple-alt"></i>
+            </div>
+            <h5 class="fw-bold">Diet Plan</h5>
+            <p class="text-muted small mb-0">View your assigned diet</p>
+        </a>
+    </div>
+
+    <!-- Leave Request Tile -->
+    <div class="col-lg-4 col-md-6 mb-4">
+        <a href="{% url 'leave_request' %}" class="card shadow-4-strong dashboard-tile text-center p-4">
+            <div class="text-warning tile-icon">
+                <i class="fas fa-user-clock"></i>
+            </div>
+            <h5 class="fw-bold">Leave Request</h5>
+            <p class="text-muted small mb-0">Apply for time off</p>
+        </a>
+    </div>
+
+    <!-- Chat Tile -->
+    <div class="col-lg-4 col-md-6 mb-4">
+        <a href="{% url 'chat_room' room_name='general' %}" class="card shadow-4-strong dashboard-tile text-center p-4">
+            <div class="text-secondary tile-icon">
+                <i class="fas fa-comments"></i>
+            </div>
+            <h5 class="fw-bold">Chat with Trainer</h5>
+            <p class="text-muted small mb-0">Get personal suggestions</p>
+        </a>
+    </div>
+</div>
+{% endblock %}

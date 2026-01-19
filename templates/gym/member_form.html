@@ -1,0 +1,142 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow-4-strong">
+            <div class="card-header bg-primary text-white py-3">
+                <h5 class="mb-0 fw-bold"><i class="fas fa-user-plus me-2"></i>{{ title }}</h5>
+            </div>
+            <div class="card-body p-4">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        {% for error in form.non_field_errors %}
+                        {{ error }}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    {% if not is_edit %}
+                    <h6 class="text-uppercase text-muted fw-bold small mb-3">Login Credentials</h6>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Username</label>
+                            {{ form.username }}
+                            {% if form.username.errors %}
+                            <div class="text-danger small mt-1">{{ form.username.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Email</label>
+                            {{ form.email }}
+                            {% if form.email.errors %}
+                            <div class="text-danger small mt-1">{{ form.email.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Password <span class="text-danger">*</span></label>
+                            {{ form.password }}
+                            <small class="text-muted">Minimum 8 characters</small>
+                            {% if form.password.errors %}
+                            <div class="text-danger small mt-1">{{ form.password.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Confirm Password <span
+                                    class="text-danger">*</span></label>
+                            {{ form.confirm_password }}
+                            {% if form.confirm_password.errors %}
+                            <div class="text-danger small mt-1">{{ form.confirm_password.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <hr class="my-4">
+                    {% endif %}
+
+                    <h6 class="text-uppercase text-muted fw-bold small mb-3">Member Details</h6>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Age</label>
+                            {{ form.age }}
+                            {% if form.age.errors %}
+                            <div class="text-danger small mt-1">{{ form.age.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Occupation</label>
+                            {{ form.occupation }}
+                            {% if form.occupation.errors %}
+                            <div class="text-danger small mt-1">{{ form.occupation.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Membership Type</label>
+                            {{ form.membership_type }}
+                            {% if form.membership_type.errors %}
+                            <div class="text-danger small mt-1">{{ form.membership_type.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Allotted Slot</label>
+                            {{ form.allotted_slot }}
+                            {% if form.allotted_slot.errors %}
+                            <div class="text-danger small mt-1">{{ form.allotted_slot.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">
+                                {% if is_edit %}Next Payment Date{% else %}Registration Date{% endif %}
+                            </label>
+                            {% if is_edit %}
+                            {{ form.next_payment_date }}
+                            {% else %}
+                            {{ form.registration_date }}
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Monthly Amount</label>
+                            {{ form.monthly_amount }}
+                            {% if form.monthly_amount.errors %}
+                            <div class="text-danger small mt-1">{{ form.monthly_amount.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    {% if not is_edit %}
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Registration Fee</label>
+                        {{ form.registration_amount }}
+                        {% if form.registration_amount.errors %}
+                        <div class="text-danger small mt-1">{{ form.registration_amount.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Profile Image</label>
+                        {{ form.image }}
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            {% if is_edit %}Update Member{% else %}Create Member{% endif %}
+                        </button>
+                        <a href="{% url 'member_list' %}" class="btn btn-light btn-lg">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

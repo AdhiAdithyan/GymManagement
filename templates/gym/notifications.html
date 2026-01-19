@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Payment Notifications</h2>
+{% if due_members %}
+<div class="alert alert-warning">
+    The following members have payments due within 10 days:
+</div>
+<ul class="list-group">
+    {% for member in due_members %}
+    <li class="list-group-item">
+        <strong>{{ member.user.username }}</strong> - Due: {{ member.next_payment_date }} (${{ member.monthly_amount }})
+    </li>
+    {% endfor %}
+</ul>
+{% else %}
+<p>No upcoming payments due in the next 10 days.</p>
+{% endif %}
+{% endblock %}
