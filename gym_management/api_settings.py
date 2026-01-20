@@ -31,7 +31,7 @@ SIMPLE_JWT = {
 # CORS Configuration
 CORS_ALLOWED_ORIGINS = config(
     'CORS_ALLOWED_ORIGINS', 
-    default='http://localhost:3000,http://localhost:8080', 
+    default='http://localhost:3000,http://localhost:8080,http://eragymmanagement.up.railway.app' 
     cast=lambda v: [s.strip() for s in v.split(',')]
 )
 CORS_ALLOW_CREDENTIALS = True
