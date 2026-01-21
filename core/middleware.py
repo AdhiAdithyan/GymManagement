@@ -16,19 +16,23 @@ class TenantMiddleware(MiddlewareMixin):
         tenant = None
         
         # Try to get tenant from subdomain
-        host = request.get_host().split(':')[0]
-        subdomain_parts = host.split('.')
+        host = request.get_host().split(':')[0].lower()
+        subdomain = None
         
-        # If we have a subdomain (more than 2 parts like subdomain.domain.com)
-        if len(subdomain_parts) > 2 or (len(subdomain_parts) == 2 and subdomain_parts[0] != 'www'):
-            subdomain = subdomain_parts[0]
-            
-            if subdomain and subdomain != 'www':
-                try:
-                    tenant = Tenant.objects.filter(subdomain=subdomain, is_active=True).first()
-                except Exception:
-                    # Gracefully handle missing table or other DB errors
-                    pass
+        # Simple logic: if domain is NOT eragymmanagement.up.railway.app, eragymmanagement.co.in, localhost
+        base_domains = ['eragymmanagement.up.railway.app', 'eragymmanagement.co.in', 'localhost', '127.0.0.1']
+        
+        if host not in base_domains:
+            parts = host.split('.')
+            # Handle custom subdomain (e.g., fitness.eragymmanagement.co.in)
+            if len(parts) > 2:
+                subdomain = parts[0]
+        
+        if subdomain and subdomain != 'www':
+            try:
+                tenant = Tenant.objects.filter(subdomain=subdomain, is_active=True).first()
+            except Exception:
+                pass
         
         # Fallback: Try X-Tenant-ID header (for development/testing/mobile apps)
         if not tenant:
