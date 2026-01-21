@@ -1,18 +1,64 @@
 {% extends 'base.html' %}
+
 {% block content %}
-<h2>Payment Notifications</h2>
-{% if due_members %}
-<div class="alert alert-warning">
-    The following members have payments due within 10 days:
+<div class="row mb-4">
+    <div class="col-md-12 d-flex justify-content-between align-items-center">
+        <h2 class="text-primary fw-bold"><i class="fas fa-bell me-2"></i>Payment Alerts</h2>
+        {% if due_members and user.role != 'member' %}
+        <form method="post">
+            {% csrf_token %}
+            <button type="submit" name="send_sms" class="btn btn-warning btn-rounded shadow-sm">
+                <i class="fas fa-sms me-2"></i>Send SMS Reminders
+            </button>
+        </form>
+        {% endif %}
+    </div>
 </div>
-<ul class="list-group">
-    {% for member in due_members %}
-    <li class="list-group-item">
-        <strong>{{ member.user.username }}</strong> - Due: {{ member.next_payment_date }} (₹{{ member.monthly_amount }})
-    </li>
-    {% endfor %}
-</ul>
+
+{% if due_members %}
+<div class="card shadow-4-strong">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0 align-middle">
+                <thead class="bg-light">
+                    <tr>
+                        <th class="ps-4">Member</th>
+                        <th>Phone</th>
+                        <th>Amount</th>
+                        <th>Due Date</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for member in due_members %}
+                    <tr>
+                        <td class="ps-4">
+                            <div class="fw-bold">{{ member.user.username }}</div>
+                            <div class="small text-muted">{{ member.user.email }}</div>
+                        </td>
+                        <td>{{ member.phone_number|default:"N/A" }}</td>
+                        <td class="fw-bold text-danger">₹{{ member.monthly_amount }}</td>
+                        <td>{{ member.next_payment_date }}</td>
+                        <td>
+                            {% now "Y-m-d" as today %}
+                            {% if member.next_payment_date|date:"Y-m-d" <= today %} <span class="badge bg-danger">
+                                Overdue</span>
+                                {% else %}
+                                <span class="badge bg-warning">Due Soon</span>
+                                {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
 {% else %}
-<p>No upcoming payments due in the next 10 days.</p>
+<div class="card shadow-4-strong p-5 text-center">
+    <i class="fas fa-check-circle fa-4x text-success mb-3"></i>
+    <h4 class="fw-bold">All caught up!</h4>
+    <p class="text-muted">No payments are due within the next 10 days.</p>
+</div>
 {% endif %}
 {% endblock %}

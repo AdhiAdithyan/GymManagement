@@ -26,7 +26,8 @@ class TenantMiddleware(MiddlewareMixin):
             if subdomain and subdomain != 'www':
                 try:
                     tenant = Tenant.objects.get(subdomain=subdomain, is_active=True)
-                except Tenant.DoesNotExist:
+                except (Tenant.DoesNotExist, Exception):
+                    # Gracefully handle missing table or other DB errors
                     pass
         
         # Fallback: Try X-Tenant-ID header (for development/testing/mobile apps)

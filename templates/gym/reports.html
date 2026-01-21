@@ -1,0 +1,148 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12 d-flex justify-content-between align-items-center">
+        <div>
+            <h2 class="text-primary fw-bold"><i class="fas fa-chart-line me-2"></i>Analytics & Reports</h2>
+            <p class="text-muted">Visual insights into your gym's performance.</p>
+        </div>
+        <a href="{% url 'export_report_pdf' %}" class="btn btn-danger btn-rounded">
+            <i class="fas fa-file-pdf me-2"></i>Export PDF
+        </a>
+    </div>
+</div>
+
+<!-- Summary Cards -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card bg-success text-white shadow-sm p-3">
+            <div class="d-flex justify-content-between">
+                <div>
+                    <h6 class="text-uppercase small">Total Revenue</h6>
+                    <h2 class="fw-bold mb-0">₹{{ total_revenue }}</h2>
+                </div>
+                <i class="fas fa-hand-holding-usd fa-2x opacity-50"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-danger text-white shadow-sm p-3">
+            <div class="d-flex justify-content-between">
+                <div>
+                    <h6 class="text-uppercase small">Total Expenses</h6>
+                    <h2 class="fw-bold mb-0">₹{{ total_expenses }}</h2>
+                </div>
+                <i class="fas fa-file-invoice-dollar fa-2x opacity-50"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-primary text-white shadow-sm p-3">
+            <div class="d-flex justify-content-between">
+                <div>
+                    <h6 class="text-uppercase small">Net Profit</h6>
+                    <h2 class="fw-bold mb-0">₹{{ profit }}</h2>
+                </div>
+                <i class="fas fa-wallet fa-2x opacity-50"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Revenue Chart -->
+    <div class="col-lg-8 mb-4">
+        <div class="card p-4 h-100">
+            <h5 class="fw-bold mb-4">Monthly Revenue (Last 6 Months)</h5>
+            <canvas id="revenueChart" height="250"></canvas>
+        </div>
+    </div>
+
+    <!-- Expense Breakdown -->
+    <div class="col-lg-4 mb-4">
+        <div class="card p-4 h-100">
+            <h5 class="fw-bold mb-4">Expense Breakdown</h5>
+            <canvas id="expenseChart" height="250"></canvas>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Attendance Trends -->
+    <div class="col-lg-12 mb-4">
+        <div class="card p-4">
+            <h5 class="fw-bold mb-4">Attendance Trends (Last 30 Days)</h5>
+            <canvas id="attendanceChart" height="100"></canvas>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Revenue Chart
+    const revenueCtx = document.getElementById('revenueChart').getContext('2d');
+    new Chart(revenueCtx, {
+        type: 'line',
+        data: {
+            labels: [{% for item in monthly_revenue %}"{{ item.month|date:'M Y' }}"{% if not forloop.last %}, {% endif %}{% endfor %}],
+        datasets: [{
+            label: 'Revenue',
+            data: [{% for item in monthly_revenue %}{{ item.total }}{% if not forloop.last %}, {% endif %} {% endfor %}],
+    borderColor: '#3b71ca',
+        backgroundColor: 'rgba(59, 113, 202, 0.1)',
+            fill: true,
+                tension: 0.4
+            }]
+        },
+    options: {
+        responsive: true,
+            plugins: {
+            legend: { display: false }
+        }
+    }
+    });
+
+    // Expense Chart
+    const expenseCtx = document.getElementById('expenseChart').getContext('2d');
+    new Chart(expenseCtx, {
+        type: 'doughnut',
+        data: {
+            labels: [{% for item in expense_breakdown %}"{{ item.category|title }}"{% if not forloop.last %}, {% endif %}{% endfor %}],
+        datasets: [{
+            data: [{% for item in expense_breakdown %}{{ item.total }}{% if not forloop.last %}, {% endif %} {% endfor %}],
+    backgroundColor: ['#3b71ca', '#acb0b8', '#14a44d', '#dc4c64', '#e4a11b']
+            }]
+        },
+    options: {
+        responsive: true,
+            plugins: {
+            legend: { position: 'bottom' }
+        }
+    }
+    });
+
+    // Attendance Chart
+    const attCtx = document.getElementById('attendanceChart').getContext('2d');
+    new Chart(attCtx, {
+        type: 'bar',
+        data: {
+            labels: [{% for item in daily_attendance %}"{{ item.date|date:'d M' }}"{% if not forloop.last %}, {% endif %}{% endfor %}],
+        datasets: [{
+            label: 'Check-ins',
+            data: [{% for item in daily_attendance %}{{ item.count }}{% if not forloop.last %}, {% endif %} {% endfor %}],
+    backgroundColor: '#14a44d',
+        borderRadius: 5
+            }]
+        },
+    options: {
+        responsive: true,
+            scales: {
+            y: { beginAtZero: true, ticks: { stepSize: 1 } }
+        }
+    }
+    });
+</script>
+{% endblock %}

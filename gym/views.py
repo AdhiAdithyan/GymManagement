@@ -169,7 +169,6 @@ def leave_request_create(request):
     return render(request, 'gym/leave_request_form.html', {'form': form})
 
 @login_required
-@login_required
 def member_list(request):
     # Restrict to Admin, Trainer, Staff
     if request.user.role not in ['admin', 'tenant_admin', 'super_admin', 'trainer', 'staff']:
@@ -206,7 +205,6 @@ def member_list(request):
     members = members.order_by('user__username')
     
     # Pagination
-    from django.core.paginator import Paginator
     paginator = Paginator(members, 10)  # 10 members per page
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
@@ -269,8 +267,6 @@ def add_member(request):
                     
                     messages.success(request, 'Member added successfully!')
                     return redirect('member_list')
-                except Exception as e:
-                    messages.error(request, f'Error creating member: {str(e)}')
                 except Exception as e:
                     messages.error(request, f'Error creating member: {str(e)}')
     else:
@@ -401,13 +397,145 @@ def chat_room(request, room_name='general'):
 
 @login_required
 def notification_check(request):
-    # Simple view to show due payments
-    # Logic: next_payment_date <= today + 10 days
+    """View to show due payments and send SMS reminders"""
     today = timezone.now().date()
     deadline = today + timezone.timedelta(days=10)
+    
+    tenant = getattr(request, 'tenant', None)
     due_members = MemberProfile.objects.filter(next_payment_date__range=[today, deadline])
+    if tenant:
+        due_members = due_members.filter(tenant=tenant)
+        
+    if request.method == 'POST' and 'send_sms' in request.POST:
+        if request.user.role not in ['admin', 'tenant_admin', 'super_admin']:
+            messages.error(request, "Permission denied.")
+            return redirect('notifications')
+            
+        from .sms_service import sms_service
+        
+        template = "Hello {name}, your gym membership is due on {due_date}. Please pay soon to avoid interruption."
+        results = sms_service.send_bulk_sms(due_members, template)
+        
+        messages.success(request, f"SMS Reminders: {results['successful']} sent, {results['failed']} failed.")
+        return redirect('notifications')
     
     return render(request, 'gym/notifications.html', {'due_members': due_members})
+
+
+@login_required
+def reports_view(request):
+    """Analytics and Reports for Admin"""
+    if request.user.role not in ['admin', 'tenant_admin', 'super_admin']:
+        return redirect('dashboard')
+    
+    tenant = getattr(request, 'tenant', None)
+    
+    # Revenue Stats (Last 6 Months)
+    from django.db.models.functions import TruncMonth
+    from datetime import datetime, timedelta
+    
+    six_months_ago = timezone.now() - timedelta(days=180)
+    
+    payments = Payment.objects.all()
+    if tenant:
+        payments = payments.filter(tenant=tenant)
+    
+    monthly_revenue = payments.filter(date__gte=six_months_ago)\
+        .annotate(month=TruncMonth('date'))\
+        .values('month')\
+        .annotate(total=Sum('amount'))\
+        .order_by('month')
+
+    # Expense breakdown by category
+    expenses = Expense.objects.all()
+    if tenant:
+        expenses = expenses.filter(tenant=tenant)
+        
+    expense_breakdown = expenses.values('category')\
+        .annotate(total=Sum('amount'))\
+        .order_by('-total')
+
+    # Attendance Trends
+    attendance = Attendance.objects.all()
+    if tenant:
+        attendance = attendance.filter(tenant=tenant)
+        
+    daily_attendance = attendance.filter(date__gte=timezone.now() - timedelta(days=30))\
+        .values('date')\
+        .annotate(count=Count('id'))\
+        .order_by('date')
+
+    total_revenue = payments.aggregate(Sum('amount'))['amount__sum'] or 0
+    total_expenses = expenses.aggregate(Sum('amount'))['amount__sum'] or 0
+
+    context = {
+        'monthly_revenue': monthly_revenue,
+        'expense_breakdown': expense_breakdown,
+        'daily_attendance': daily_attendance,
+        'total_revenue': total_revenue,
+        'total_expenses': total_expenses,
+        'profit': total_revenue - total_expenses,
+    }
+    
+    return render(request, 'gym/reports.html', context)
+
+
+@login_required
+def export_report_pdf(request):
+    """Generate PDF report for the gym"""
+    if request.user.role not in ['admin', 'tenant_admin', 'super_admin']:
+        return redirect('dashboard')
+        
+    from django.template.loader import render_to_string
+    from xhtml2pdf import pisa
+    from django.http import HttpResponse
+    
+    tenant = getattr(request, 'tenant', None)
+    
+    # Same logic as reports_view to get data
+    from django.db.models.functions import TruncMonth
+    from datetime import timedelta
+    
+    six_months_ago = timezone.now() - timedelta(days=180)
+    
+    payments = Payment.objects.all()
+    expenses = Expense.objects.all()
+    if tenant:
+        payments = payments.filter(tenant=tenant)
+        expenses = expenses.filter(tenant=tenant)
+    
+    monthly_revenue = payments.filter(date__gte=six_months_ago)\
+        .annotate(month=TruncMonth('date'))\
+        .values('month')\
+        .annotate(total=Sum('amount'))\
+        .order_by('month')
+
+    expense_breakdown = expenses.values('category')\
+        .annotate(total=Sum('amount'))\
+        .order_by('-total')
+
+    total_revenue = payments.aggregate(Sum('amount'))['amount__sum'] or 0
+    total_expenses = expenses.aggregate(Sum('amount'))['amount__sum'] or 0
+    
+    context = {
+        'monthly_revenue': monthly_revenue,
+        'expense_breakdown': expense_breakdown,
+        'total_revenue': total_revenue,
+        'total_expenses': total_expenses,
+        'profit': total_revenue - total_expenses,
+        'generate_date': timezone.now(),
+        'tenant': tenant,
+    }
+    
+    html = render_to_string('gym/report_pdf.html', context)
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="gym_report_{timezone.now().strftime("%Y%m%d")}.pdf"'
+    
+    pisa_status = pisa.CreatePDF(html, dest=response)
+    
+    if pisa_status.err:
+        return HttpResponse('We had some errors <pre>' + html + '</pre>')
+    return response
 
 @login_required
 def trainer_attendance_view(request):

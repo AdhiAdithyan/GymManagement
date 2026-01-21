@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <style>
+        body {
+            font-family: 'Helvetica', 'Arial', sans-serif;
+            color: #333;
+        }
+
+        .header {
+            text-align: center;
+            border-bottom: 2px solid #3b71ca;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+
+        .title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #3b71ca;
+        }
+
+        .subtitle {
+            font-size: 14px;
+            color: #666;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        th,
+        td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+            color: #3b71ca;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin: 20px 0 10px;
+            color: #444;
+        }
+
+        .summary-box {
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+
+        .summary-item {
+            margin-bottom: 5px;
+        }
+
+        .summary-label {
+            font-weight: bold;
+            width: 150px;
+            display: inline-block;
+        }
+
+        .footer {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            text-align: center;
+            font-size: 10px;
+            color: #999;
+            border-top: 1px solid #ddd;
+            padding-top: 5px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <div class="title">Gym Management System Report</div>
+        <div class="subtitle">Generated on {{ generate_date|date:"F d, Y H:i" }}</div>
+    </div>
+
+    <div class="summary-box">
+        <div class="section-title">Financial Summary</div>
+        <div class="summary-item"><span class="summary-label">Total Revenue:</span> ₹{{ total_revenue }}</div>
+        <div class="summary-item"><span class="summary-label">Total Expenses:</span> ₹{{ total_expenses }}</div>
+        <div class="summary-item"><span class="summary-label">Net Profit:</span> ₹{{ profit }}</div>
+    </div>
+
+    <div class="section-title">Monthly Revenue Breakdown</div>
+    <table>
+        <thead>
+            <tr>
+                <th>Month</th>
+                <th>Revenue</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in monthly_revenue %}
+            <tr>
+                <td>{{ item.month|date:"F Y" }}</td>
+                <td>₹{{ item.total }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="section-title">Expense Breakdown</div>
+    <table>
+        <thead>
+            <tr>
+                <th>Category</th>
+                <th>Total Amount</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in expense_breakdown %}
+            <tr>
+                <td>{{ item.category|title }}</td>
+                <td>₹{{ item.total }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="footer">
+        Page <pdf:pagenumber> of <pdf:pagecount> | Gym Management System | Secure Admin Report
+    </div>
+</body>
+
+</html>
