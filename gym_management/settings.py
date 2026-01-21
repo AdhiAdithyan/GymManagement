@@ -18,6 +18,12 @@ DEBUG = config('DEBUG', default=True, cast=bool)
 
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='*', cast=lambda v: [s.strip() for s in v.split(',')])
 
+CSRF_TRUSTED_ORIGINS = config(
+    'CSRF_TRUSTED_ORIGINS', 
+    default='https://eragymmanagement.up.railway.app,https://*.up.railway.app,https://eragymmanagement.co.in',
+    cast=lambda v: [s.strip() for s in v.split(',')]
+)
+
 
 # Application definition
 
