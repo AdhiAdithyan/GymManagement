@@ -1,1 +1,1 @@
-web: gunicorn gym_management.wsgi
+web: python manage.py migrate && gunicorn gym_management.wsgi
