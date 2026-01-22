@@ -104,23 +104,36 @@ class MemberProfile(models.Model):
     def __str__(self):
         return f"{self.user.username} Profile"
     
-    def clean(self):
-        """Validate phone number format"""
+    @staticmethod
+    def validate_phone(phone_number):
+        """
+        Validates and cleans a phone number. 
+        Returns the cleaned number if valid, raises ValidationError if not.
+        """
         from django.core.exceptions import ValidationError
         import re
         
+        if not phone_number:
+            return None
+            
+        # Remove spaces and dashes for validation
+        phone = phone_number.replace(' ', '').replace('-', '').replace('(', '').replace(')', '')
+        
+        # Check if it starts with + and has 10-15 digits
+        if not re.match(r'^\+\d{10,15}$', phone):
+            raise ValidationError('Phone number must be in international format (e.g., +1234567890)')
+            
+        return phone
+
+    def clean(self):
+        """Validate phone number format"""
+        from django.core.exceptions import ValidationError
+        
         if self.phone_number:
-            # Remove spaces and dashes for validation
-            phone = self.phone_number.replace(' ', '').replace('-', '')
-            
-            # Check if it starts with + and has 10-15 digits
-            if not re.match(r'^\+\d{10,15}$', phone):
-                raise ValidationError({
-                    'phone_number': 'Phone number must be in international format (e.g., +1234567890)'
-                })
-            
-            # Store cleaned version
-            self.phone_number = phone
+            try:
+                self.phone_number = MemberProfile.validate_phone(self.phone_number)
+            except ValidationError as e:
+                raise ValidationError({'phone_number': e.message})
 
 class Attendance(models.Model):
     tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE, null=True, blank=True)

@@ -1,0 +1,19 @@
+{% for msg in messages %}
+<div class="d-flex flex-column mb-3 {% if msg.sender == user %}align-items-end{% else %}align-items-start{% endif %}">
+    <div class="chat-bubble shadow-1 {% if msg.sender == user %}chat-sent{% else %}chat-received{% endif %}">
+        <div class="small fw-bold mb-1">{{ msg.sender.username }}</div>
+        {{ msg.content }}
+    </div>
+    <small class="text-muted ms-1">{{ msg.timestamp|date:"H:i" }}</small>
+</div>
+{% empty %}
+<div class="text-center text-muted mt-5">No messages yet. Start the conversation!</div>
+{% endfor %}
+
+<script>
+    // Auto-scroll on update
+    var chatBox = document.getElementById('chat-box');
+    if (chatBox) {
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+</script>

@@ -4,8 +4,9 @@ from django.contrib import messages
 from django.utils import timezone
 from core.models import CustomUser, MemberProfile, Attendance, Payment, Expense, ChatMessage, DietPlan, WorkoutVideo, LeaveRequest
 from .forms import VideoForm, DietPlanForm, LeaveRequestForm, MemberAddForm, MemberEditForm
-from django.db.models import Sum, Q
+from django.db.models import Sum, Q, Count
 from django.core.paginator import Paginator
+from core.decorators import role_required
 
 @login_required
 def dashboard(request):
@@ -169,10 +170,8 @@ def leave_request_create(request):
     return render(request, 'gym/leave_request_form.html', {'form': form})
 
 @login_required
+@role_required(['admin', 'tenant_admin', 'super_admin', 'trainer', 'staff'])
 def member_list(request):
-    # Restrict to Admin, Trainer, Staff
-    if request.user.role not in ['admin', 'tenant_admin', 'super_admin', 'trainer', 'staff']:
-        return redirect('dashboard')
     
     # Get filter parameters
     search_query = request.GET.get('search', '')
@@ -220,9 +219,8 @@ def member_list(request):
 
 
 @login_required
+@role_required(['admin', 'tenant_admin', 'super_admin', 'trainer'])
 def add_member(request):
-    if request.user.role not in ['admin', 'tenant_admin', 'super_admin', 'trainer']:
-        return redirect('dashboard')
         
     if request.method == 'POST':
         form = MemberAddForm(request.POST, request.FILES)
@@ -274,9 +272,8 @@ def add_member(request):
     return render(request, 'gym/member_form.html', {'form': form, 'title': 'Add New Member'})
 
 @login_required
+@role_required(['admin', 'tenant_admin', 'super_admin', 'trainer'])
 def edit_member(request, member_id):
-    if request.user.role not in ['admin', 'tenant_admin', 'super_admin', 'trainer']:
-        return redirect('dashboard')
         
     member = get_object_or_404(MemberProfile, id=member_id)
     if request.method == 'POST':
@@ -290,7 +287,9 @@ def edit_member(request, member_id):
     return render(request, 'gym/member_form.html', {'form': form, 'title': 'Edit Member', 'is_edit': True})
 
 @login_required
+@role_required(['admin', 'tenant_admin', 'super_admin'])
 def delete_member(request, member_id):
+    # Double check in case decorator list changes
     if request.user.role not in ['admin', 'tenant_admin', 'super_admin']:
         messages.error(request, 'Only Admins can delete members.')
         return redirect('member_list')
@@ -348,9 +347,8 @@ def mark_attendance(request):
 
 
 @login_required
+@role_required(['admin', 'tenant_admin', 'super_admin'])
 def finance_overview(request):
-    if request.user.role not in ['admin', 'tenant_admin', 'super_admin']:
-        return redirect('dashboard')
         
     date_from = request.GET.get('date_from', '')
     date_to = request.GET.get('date_to', '')
@@ -382,7 +380,8 @@ def finance_overview(request):
 
 @login_required
 def chat_room(request, room_name='general'):
-    messages_list = ChatMessage.objects.filter(room_name=room_name).order_by('timestamp')
+    messages_list = ChatMessage.objects.filter(room_name=room_name).select_related('sender').order_by('timestamp')
+    
     if request.method == 'POST':
         content = request.POST.get('content')
         if content:
@@ -391,9 +390,73 @@ def chat_room(request, room_name='general'):
                 room_name=room_name,
                 content=content
             )
+            # If HTMX request, just return the messages list partial
+            if request.headers.get('HX-Request'):
+                 messages_list = ChatMessage.objects.filter(room_name=room_name).select_related('sender').order_by('timestamp')
+                 return render(request, 'gym/partials/chat_message_list.html', {'messages': messages_list})
             return redirect('chat_room', room_name=room_name)
+    
+    # If HTMX polling request (GET)
+    if request.headers.get('HX-Request'):
+         return render(request, 'gym/partials/chat_message_list.html', {'messages': messages_list})
             
     return render(request, 'gym/chat.html', {'messages': messages_list, 'room_name': room_name})
+
+@login_required
+def member_qr(request):
+    """Generate QR Code for Member"""
+    import qrcode
+    from django.http import HttpResponse
+    
+    # Content is the username (unique ID)
+    data = request.user.username
+    
+    qr = qrcode.QRCode(
+        version=1,
+        error_correction=qrcode.constants.ERROR_CORRECT_L,
+        box_size=10,
+        border=4,
+    )
+    qr.add_data(data)
+    qr.make(fit=True)
+
+    img = qr.make_image(fill_color="black", back_color="white")
+    
+    response = HttpResponse(content_type="image/png")
+    img.save(response, "PNG")
+    return response
+
+@login_required
+@role_required(['admin', 'tenant_admin', 'super_admin', 'trainer', 'staff'])
+def attendance_scan(request):
+    """Handle QR Code Scan via HTMX"""
+    from django.http import HttpResponse # Import here to be safe
+    
+    if request.method == 'POST':
+        code = request.POST.get('code')
+        if code:
+            try:
+                # Code is username
+                member = MemberProfile.objects.get(user__username=code)
+                
+                # Mark attendance
+                Attendance.objects.create(
+                    tenant=getattr(request, 'tenant', None),
+                    member=member,
+                    date=timezone.now().date(),
+                    check_in_time=timezone.now().time(),
+                    status='Present'
+                )
+                
+                msg = f'<div class="alert alert-success">Checked in: <strong>{member.user.username}</strong></div>'
+                return HttpResponse(msg)
+                
+            except MemberProfile.DoesNotExist:
+                return HttpResponse(f'<div class="alert alert-danger">Member not found: {code}</div>')
+            except Exception as e:
+                return HttpResponse(f'<div class="alert alert-danger">Error: {str(e)}</div>')
+                
+    return HttpResponse('')
 
 @login_required
 def notification_check(request):
@@ -402,7 +465,7 @@ def notification_check(request):
     deadline = today + timezone.timedelta(days=10)
     
     tenant = getattr(request, 'tenant', None)
-    due_members = MemberProfile.objects.filter(next_payment_date__range=[today, deadline])
+    due_members = MemberProfile.objects.filter(next_payment_date__range=[today, deadline]).select_related('user')
     if tenant:
         due_members = due_members.filter(tenant=tenant)
         
@@ -423,10 +486,9 @@ def notification_check(request):
 
 
 @login_required
+@role_required(['admin', 'tenant_admin', 'super_admin'])
 def reports_view(request):
     """Analytics and Reports for Admin"""
-    if request.user.role not in ['admin', 'tenant_admin', 'super_admin']:
-        return redirect('dashboard')
     
     tenant = getattr(request, 'tenant', None)
     
@@ -481,10 +543,9 @@ def reports_view(request):
 
 
 @login_required
+@role_required(['admin', 'tenant_admin', 'super_admin'])
 def export_report_pdf(request):
     """Generate PDF report for the gym"""
-    if request.user.role not in ['admin', 'tenant_admin', 'super_admin']:
-        return redirect('dashboard')
         
     from django.template.loader import render_to_string
     from xhtml2pdf import pisa
@@ -538,9 +599,8 @@ def export_report_pdf(request):
     return response
 
 @login_required
+@role_required(['trainer', 'admin', 'tenant_admin', 'super_admin'])
 def trainer_attendance_view(request):
-    if request.user.role not in ['trainer', 'admin', 'tenant_admin', 'super_admin']:
-        return redirect('dashboard')
     
     search_query = request.GET.get('search', '')
     date_query = request.GET.get('date', '')
@@ -568,9 +628,8 @@ def trainer_attendance_view(request):
     return render(request, 'gym/attendance_list.html', context)
 
 @login_required
+@role_required(['trainer', 'admin', 'tenant_admin', 'super_admin'])
 def upload_video(request):
-    if request.user.role not in ['trainer', 'admin', 'tenant_admin', 'super_admin']:
-        return redirect('dashboard')
         
     if request.method == 'POST':
         form = VideoForm(request.POST, request.FILES)
@@ -583,9 +642,8 @@ def upload_video(request):
     return render(request, 'gym/video_upload.html', {'form': form})
 
 @login_required
+@role_required(['trainer', 'admin', 'tenant_admin', 'super_admin'])
 def create_diet_plan(request):
-    if request.user.role not in ['trainer', 'admin', 'tenant_admin', 'super_admin']:
-        return redirect('dashboard')
         
     if request.method == 'POST':
         form = DietPlanForm(request.POST)
@@ -600,9 +658,8 @@ def create_diet_plan(request):
     return render(request, 'gym/diet_plan_form.html', {'form': form})
 
 @login_required
+@role_required(['admin', 'tenant_admin', 'super_admin'])
 def trainer_list(request):
-    if request.user.role not in ['admin', 'tenant_admin', 'super_admin']:
-        return redirect('dashboard')
     
     search_query = request.GET.get('search', '')
     trainers = CustomUser.objects.filter(role='trainer').order_by('username')
@@ -626,9 +683,8 @@ def trainer_list(request):
     return render(request, 'gym/trainer_list.html', context)
 
 @login_required
+@role_required(['admin', 'tenant_admin', 'super_admin', 'trainer'])
 def leave_request_list(request):
-    if request.user.role not in ['admin', 'tenant_admin', 'super_admin', 'trainer']:
-        return redirect('dashboard')
         
     status_filter = request.GET.get('status', '')
     date_filter = request.GET.get('date', '')
@@ -651,9 +707,8 @@ def leave_request_list(request):
     })
 
 @login_required
+@role_required(['admin', 'tenant_admin', 'super_admin', 'trainer'])
 def leave_request_action(request, leave_id):
-    if request.user.role not in ['admin', 'tenant_admin', 'super_admin', 'trainer']:
-        return redirect('dashboard')
         
     leave = get_object_or_404(LeaveRequest, id=leave_id)
     
@@ -673,11 +728,9 @@ def leave_request_action(request, leave_id):
     return redirect('leave_request_list')
 
 @login_required
+@role_required(['admin', 'tenant_admin', 'super_admin', 'trainer'])
 def send_whatsapp_message(request):
     """View for sending WhatsApp messages to members by time slot"""
-    if request.user.role not in ['admin', 'tenant_admin', 'super_admin', 'trainer']:
-        messages.error(request, 'You do not have permission to send WhatsApp messages.')
-        return redirect('dashboard')
     
     from .forms import WhatsAppMessageForm
     from .whatsapp_service import whatsapp_service
@@ -740,10 +793,9 @@ def send_whatsapp_message(request):
     return render(request, 'gym/send_whatsapp.html', context)
 
 @login_required
+@role_required(['admin', 'tenant_admin', 'super_admin', 'trainer'])
 def whatsapp_history(request):
     """View message history"""
-    if request.user.role not in ['admin', 'tenant_admin', 'super_admin', 'trainer']:
-        return redirect('dashboard')
     
     from core.models import WhatsAppMessage
     
@@ -771,16 +823,15 @@ def whatsapp_history(request):
     return render(request, 'gym/whatsapp_history.html', context)
 
 @login_required
+@role_required(['admin', 'tenant_admin', 'super_admin'])
 def bulk_import_phones(request):
     """Bulk import phone numbers from CSV"""
-    if request.user.role not in ['admin', 'tenant_admin', 'super_admin']:
-        messages.error(request, 'Only administrators can import phone numbers.')
-        return redirect('dashboard')
     
     from .forms import BulkPhoneImportForm
     import csv
     import io
-    import re
+    
+    from django.core.exceptions import ValidationError # Added for validation
     
     if request.method == 'POST':
         form = BulkPhoneImportForm(request.POST, request.FILES)
@@ -818,16 +869,15 @@ def bulk_import_phones(request):
                             continue
                         
                         # Validate phone number format
-                        phone_clean = phone_number.replace(' ', '').replace('-', '').replace('(', '').replace(')', '')
-                        if not re.match(r'^\+\d{10,15}$', phone_clean):
-                            errors.append(f"Row {row_num}: Invalid phone format for '{username}'. Use +1234567890")
+                        try:
+                            phone_clean = MemberProfile.validate_phone(phone_number)
+                            member.phone_number = phone_clean
+                            member.save()
+                            success_count += 1
+                        except ValidationError as e:
+                            errors.append(f"Row {row_num}: Invalid phone format for '{username}' - {str(e)}")
                             error_count += 1
                             continue
-                        
-                        # Update phone number
-                        member.phone_number = phone_clean
-                        member.save()
-                        success_count += 1
                         
                     except Exception as e:
                         errors.append(f"Row {row_num}: Error - {str(e)}")
@@ -862,11 +912,9 @@ def bulk_import_phones(request):
 
 
 @login_required
+@role_required(['admin', 'tenant_admin', 'super_admin'])
 def branding_settings(request):
     """Manage tenant branding settings"""
-    if request.user.role not in ['admin', 'tenant_admin', 'super_admin']:
-        messages.error(request, 'You do not have permission to access branding settings.')
-        return redirect('dashboard')
     
     from .forms import BrandingForm
     from core.models import BrandingConfig
