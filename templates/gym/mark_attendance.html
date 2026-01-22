@@ -15,7 +15,8 @@
         <div style="width: 300px;">
             <input type="text" class="form-control form-control-sm" name="code" placeholder="Scan QR / Enter ID..."
                 autofocus hx-post="{% url 'attendance_scan' %}" hx-trigger="keyup[key=='Enter']"
-                hx-target="#scan-result" hx-swap="innerHTML" _="on htmx:afterOnLoad this.value=''" autocomplete="off">
+                hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}' hx-target="#scan-result" hx-swap="innerHTML"
+                _="on htmx:afterOnLoad set my value to ''" autocomplete="off">
         </div>
     </div>
     <div id="scan-result" class="px-3 pt-3"></div>
