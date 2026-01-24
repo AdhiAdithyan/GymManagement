@@ -309,6 +309,7 @@ def delete_member(request, member_id):
     return redirect('member_list')
 
 @login_required
+@role_required(['admin', 'tenant_admin', 'super_admin', 'trainer', 'staff'])
 def mark_attendance(request):
     if request.method == 'POST':
         member_id = request.POST.get('member_id')
