@@ -50,6 +50,29 @@
                         <div class="form-text">Upload a logo with a transparent background for best results.</div>
                     </div>
 
+                    <div class="mb-4">
+                        <label class="form-label fw-bold d-block">Automatic Notifications</label>
+                        <div class="form-check form-switch p-2 bg-light rounded border px-4">
+                            {{ form.enable_auto_whatsapp_reminders }}
+                            <label class="form-check-label fw-bold ms-2"
+                                for="{{ form.enable_auto_whatsapp_reminders.id_for_label }}">
+                                Enable Automatic WhatsApp Payment Reminders
+                            </label>
+                            <p class="small text-muted mb-0 mt-1">
+                                When enabled, members will automatically receive WhatsApp reminders based on the
+                                schedule
+                                below.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="mb-4" id="reminder_days_container">
+                        <label class="form-label fw-bold">Send Reminder X Days Before Due Date</label>
+                        {{ form.whatsapp_reminder_days_before }}
+                        <div class="form-text">Choose how many days before the due date members should receive an
+                            automatic WhatsApp message.</div>
+                    </div>
+
                     <div class="d-grid gap-2 mt-4">
                         <button type="submit" class="btn btn-primary btn-lg">Save Changes</button>
                         <a href="{% url 'dashboard' %}" class="btn btn-light">Back to Dashboard</a>

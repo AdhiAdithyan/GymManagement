@@ -15,6 +15,8 @@ urlpatterns = [
     path('attendance/scan/', views.attendance_scan, name='attendance_scan'), # New
     path('member/qr/', views.member_qr, name='member_qr'), # New
     path('finance/', views.finance_overview, name='finance'),
+    path('finance/add-payment/', views.add_payment, name='add_payment'),
+    path('finance/add-expense/', views.add_expense, name='add_expense'),
     path('reports/', views.reports_view, name='reports'),
     path('reports/export/', views.export_report_pdf, name='export_report_pdf'),
     path('chat/<str:room_name>/', views.chat_room, name='chat_room'),
@@ -27,13 +29,22 @@ urlpatterns = [
     path('trainers/edit/<int:trainer_id>/', views.edit_trainer, name='edit_trainer'),
     path('trainers/delete/<int:trainer_id>/', views.delete_trainer, name='delete_trainer'),
     
+    # Staff Management Routes
+    path('manage/staff/', views.staff_list, name='staff_list'),
+    path('staff/add/', views.add_staff, name='add_staff'),
+    path('staff/edit/<int:staff_id>/', views.edit_staff, name='edit_staff'),
+    path('staff/delete/<int:staff_id>/', views.delete_staff, name='delete_staff'),
+    
     path('leave/list/', views.leave_request_list, name='leave_request_list'),
     path('leave/action/<int:leave_id>/', views.leave_request_action, name='leave_request_action'),
 
     # WhatsApp Routes
     path('whatsapp/send/', views.send_whatsapp_message, name='send_whatsapp'),
     path('whatsapp/history/', views.whatsapp_history, name='whatsapp_history'),
+    path('whatsapp/reminder/<int:member_id>/', views.send_payment_reminder, name='send_payment_reminder'),
     path('members/import-phones/', views.bulk_import_phones, name='bulk_import_phones'),
+    path('members/bulk-import/', views.bulk_import_members, name='bulk_import_members'),
+    path('members/import-sample/', views.download_member_import_sample, name='download_member_import_sample'),
     path('branding/', views.branding_settings, name='branding_settings'),
 
     # Member Routes

@@ -1,5 +1,31 @@
 from django import forms
-from core.models import WorkoutVideo, DietPlan, LeaveRequest, MemberProfile, CustomUser, BrandingConfig
+from core.models import (
+    WorkoutVideo, DietPlan, LeaveRequest, MemberProfile, 
+    CustomUser, BrandingConfig, Payment, Expense
+)
+
+class PaymentForm(forms.ModelForm):
+    class Meta:
+        model = Payment
+        fields = ['member', 'amount', 'date', 'payment_type', 'remarks']
+        widgets = {
+            'member': forms.Select(attrs={'class': 'form-control'}),
+            'amount': forms.NumberInput(attrs={'class': 'form-control'}),
+            'date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'payment_type': forms.Select(attrs={'class': 'form-control'}),
+            'remarks': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+        }
+
+class ExpenseForm(forms.ModelForm):
+    class Meta:
+        model = Expense
+        fields = ['category', 'amount', 'date', 'description']
+        widgets = {
+            'category': forms.Select(attrs={'class': 'form-control'}),
+            'amount': forms.NumberInput(attrs={'class': 'form-control'}),
+            'date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+        }
 
 class VideoForm(forms.ModelForm):
     class Meta:
@@ -156,16 +182,35 @@ class BulkPhoneImportForm(forms.Form):
         return file
 
 
+class BulkMemberImportForm(forms.Form):
+    """Form for bulk importing members from CSV"""
+    csv_file = forms.FileField(
+        label='CSV File',
+        help_text='Upload a CSV file with columns: username, email, first_name, last_name, password, membership_type, age, phone_number, registration_amount, monthly_amount, allotted_slot, address',
+        widget=forms.FileInput(attrs={'class': 'form-control', 'accept': '.csv'})
+    )
+    
+    def clean_csv_file(self):
+        file = self.cleaned_data['csv_file']
+        if not file.name.endswith('.csv'):
+            raise forms.ValidationError('File must be a CSV file (.csv)')
+        if file.size > 10 * 1024 * 1024:
+            raise forms.ValidationError('File size must be less than 10MB')
+        return file
+
+
 class BrandingForm(forms.ModelForm):
     class Meta:
         model = BrandingConfig
-        fields = ['app_name', 'primary_color', 'secondary_color', 'accent_color', 'logo']
+        fields = ['app_name', 'primary_color', 'secondary_color', 'accent_color', 'logo', 'enable_auto_whatsapp_reminders', 'whatsapp_reminder_days_before']
         widgets = {
             'app_name': forms.TextInput(attrs={'class': 'form-control'}),
             'primary_color': forms.TextInput(attrs={'class': 'form-control', 'type': 'color'}),
             'secondary_color': forms.TextInput(attrs={'class': 'form-control', 'type': 'color'}),
             'accent_color': forms.TextInput(attrs={'class': 'form-control', 'type': 'color'}),
             'logo': forms.FileInput(attrs={'class': 'form-control'}),
+            'enable_auto_whatsapp_reminders': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'whatsapp_reminder_days_before': forms.NumberInput(attrs={'class': 'form-control', 'min': 1, 'max': 30}),
         }
 
 class TrainerAddForm(forms.ModelForm):
@@ -201,6 +246,50 @@ class TrainerAddForm(forms.ModelForm):
         return cleaned_data
 
 class TrainerEditForm(forms.ModelForm):
+    class Meta:
+        model = CustomUser
+        fields = ['email', 'first_name', 'last_name']
+        widgets = {
+            'email': forms.EmailInput(attrs={'class': 'form-control'}),
+            'first_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'last_name': forms.TextInput(attrs={'class': 'form-control'}),
+        }
+
+
+class StaffAddForm(forms.ModelForm):
+    username = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control'}))
+    email = forms.EmailField(widget=forms.EmailInput(attrs={'class': 'form-control'}))
+    first_name = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control'}))
+    last_name = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control'}))
+    password = forms.CharField(
+        widget=forms.PasswordInput(attrs={'class': 'form-control'}),
+        help_text='Minimum 8 characters'
+    )
+    confirm_password = forms.CharField(
+        widget=forms.PasswordInput(attrs={'class': 'form-control'}),
+        label='Confirm Password'
+    )
+    
+    class Meta:
+        model = CustomUser
+        fields = ['username', 'email', 'first_name', 'last_name', 'password']
+    
+    def clean(self):
+        cleaned_data = super().clean()
+        password = cleaned_data.get('password')
+        confirm_password = cleaned_data.get('confirm_password')
+        
+        if password and confirm_password:
+            if password != confirm_password:
+                raise forms.ValidationError("Passwords do not match!")
+            
+            if len(password) < 8:
+                raise forms.ValidationError("Password must be at least 8 characters long!")
+        
+        return cleaned_data
+
+
+class StaffEditForm(forms.ModelForm):
     class Meta:
         model = CustomUser
         fields = ['email', 'first_name', 'last_name']

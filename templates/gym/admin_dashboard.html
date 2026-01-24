@@ -33,7 +33,7 @@
 <!-- Stats Row -->
 <div class="row mb-5">
     <!-- Total Members Card -->
-    <div class="col-xl-3 col-md-6 mb-4">
+    <div class="col-xl-3 col-md-6 col-sm-12 mb-4">
         <div class="card border-start border-4 border-primary h-100 shadow-sm">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center">
@@ -50,7 +50,7 @@
     </div>
 
     <!-- Trainers Count -->
-    <div class="col-xl-3 col-md-6 mb-4">
+    <div class="col-xl-3 col-md-6 col-sm-12 mb-4">
         <div class="card border-start border-4 border-info h-100 shadow-sm">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center">
@@ -67,7 +67,7 @@
     </div>
 
     <!-- Staff Count -->
-    <div class="col-xl-3 col-md-6 mb-4">
+    <div class="col-xl-3 col-md-6 col-sm-12 mb-4">
         <div class="card border-start border-4 border-secondary h-100 shadow-sm">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center">
@@ -84,7 +84,7 @@
     </div>
 
     <!-- Profit Card -->
-    <div class="col-xl-3 col-md-6 mb-4">
+    <div class="col-xl-3 col-md-6 col-sm-12 mb-4">
         <div class="card border-start border-4 border-success h-100 shadow-sm">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center">
@@ -107,7 +107,7 @@
 <h4 class="mb-3 text-muted fw-bold text-uppercase small">Operations</h4>
 <div class="row">
     <!-- Manage Members Tile -->
-    <div class="col-lg-3 col-md-6 mb-4">
+    <div class="col-lg-3 col-md-6 col-sm-12 mb-4">
         <a href="{% url 'member_list' %}" class="card shadow-4-strong dashboard-tile text-center p-4">
             <div class="text-primary tile-icon">
                 <i class="fas fa-users"></i>
@@ -118,7 +118,7 @@
     </div>
 
     <!-- Manage Trainers Tile -->
-    <div class="col-lg-3 col-md-6 mb-4">
+    <div class="col-lg-3 col-md-6 col-sm-12 mb-4">
         <a href="{% url 'trainer_list' %}" class="card shadow-4-strong dashboard-tile text-center p-4">
             <div class="text-info tile-icon">
                 <i class="fas fa-chalkboard-teacher"></i>
@@ -129,7 +129,7 @@
     </div>
 
     <!-- Payments & Finance Tile -->
-    <div class="col-lg-3 col-md-6 mb-4">
+    <div class="col-lg-3 col-md-6 col-sm-12 mb-4">
         <a href="{% url 'finance' %}" class="card shadow-4-strong dashboard-tile text-center p-4">
             <div class="text-success tile-icon">
                 <i class="fas fa-file-invoice"></i>
@@ -140,7 +140,7 @@
     </div>
 
     <!-- Attendance Tile -->
-    <div class="col-lg-3 col-md-6 mb-4">
+    <div class="col-lg-3 col-md-6 col-sm-12 mb-4">
         <a href="{% url 'mark_attendance' %}" class="card shadow-4-strong dashboard-tile text-center p-4">
             <div class="text-success tile-icon">
                 <i class="fas fa-calendar-check"></i>
@@ -151,7 +151,7 @@
     </div>
 
     <!-- Reports Tile -->
-    <div class="col-lg-3 col-md-6 mb-4">
+    <div class="col-lg-3 col-md-6 col-sm-12 mb-4">
         <a href="{% url 'reports' %}" class="card shadow-4-strong dashboard-tile text-center p-4">
             <div class="text-warning tile-icon">
                 <i class="fas fa-chart-bar"></i>
@@ -162,8 +162,8 @@
     </div>
 
     <!-- Staff Management Tile -->
-    <div class="col-lg-3 col-md-6 mb-4">
-        <a href="#" class="card shadow-4-strong dashboard-tile text-center p-4">
+    <div class="col-lg-3 col-md-6 col-sm-12 mb-4">
+        <a href="{% url 'staff_list' %}" class="card shadow-4-strong dashboard-tile text-center p-4">
             <div class="text-secondary tile-icon">
                 <i class="fas fa-broom"></i>
             </div>
@@ -173,7 +173,7 @@
     </div>
 
     <!-- Notifications/Announcements Tile -->
-    <div class="col-lg-3 col-md-6 mb-4">
+    <div class="col-lg-3 col-md-6 col-sm-12 mb-4">
         <a href="{% url 'notifications' %}" class="card shadow-4-strong dashboard-tile text-center p-4">
             <div class="text-danger tile-icon">
                 <i class="fas fa-bell"></i>
@@ -184,7 +184,7 @@
     </div>
 
     <!-- Leave Requests Tile -->
-    <div class="col-lg-3 col-md-6 mb-4">
+    <div class="col-lg-3 col-md-6 col-sm-12 mb-4">
         <a href="{% url 'leave_request_list' %}" class="card shadow-4-strong dashboard-tile text-center p-4">
             <div class="text-warning tile-icon">
                 <i class="fas fa-calendar-check"></i>
@@ -194,8 +194,19 @@
         </a>
     </div>
 
+    <!-- Portal Settings Tile -->
+    <div class="col-lg-3 col-md-6 col-sm-12 mb-4">
+        <a href="{% url 'branding_settings' %}" class="card shadow-4-strong dashboard-tile text-center p-4">
+            <div class="text-dark tile-icon">
+                <i class="fas fa-cog"></i>
+            </div>
+            <h5 class="fw-bold">Portal Settings</h5>
+            <p class="text-muted small mb-0">Branding, Colors & Auto-Reminders</p>
+        </a>
+    </div>
+
     <!-- WhatsApp Messaging Tile -->
-    <div class="col-lg-3 col-md-6 mb-4">
+    <div class="col-lg-3 col-md-6 col-sm-12 mb-4">
         <a href="{% url 'send_whatsapp' %}" class="card shadow-4-strong dashboard-tile text-center p-4">
             <div class="text-success tile-icon">
                 <i class="fab fa-whatsapp"></i>

@@ -159,7 +159,41 @@
         @media (max-width: 768px) {
             .container {
                 padding-bottom: 80px;
-                /* Space for potentially fixed elements */
+                padding-left: 10px;
+                padding-right: 10px;
+            }
+
+            .navbar-brand {
+                font-size: 1.1rem;
+            }
+
+            h2 {
+                font-size: 1.5rem;
+            }
+
+            h5 {
+                font-size: 1.1rem;
+            }
+
+            .card-body {
+                padding: 1rem !important;
+            }
+        }
+
+        /* Ensure images are fluid */
+        img {
+            max-width: 100%;
+            height: auto;
+        }
+
+        /* Responsive Table Font */
+        @media (max-width: 576px) {
+            .table {
+                font-size: 0.85rem;
+            }
+
+            .btn-group .btn {
+                padding: 5px 10px;
             }
         }
     </style>

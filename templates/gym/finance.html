@@ -1,89 +1,205 @@
 {% extends 'base.html' %}
 {% block content %}
-<h2>Finance Overview</h2>
-<div class="row">
-    <div class="col-md-4">
-        <div class="alert alert-success">Income: ₹{{ income }}</div>
-    </div>
-    <div class="col-md-4">
-        <div class="alert alert-danger">Expenses: ₹{{ expense_total }}</div>
-    </div>
-    <div class="col-md-4">
-        <div class="alert alert-info">Profit: ₹{{ profit }}</div>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="fw-bold text-primary mb-0"><i class="fas fa-wallet me-2"></i>Finance Hub</h2>
+    <div class="btn-group">
+        <a href="{% url 'add_payment' %}" class="btn btn-success btn-rounded">
+            <i class="fas fa-plus-circle me-2"></i>Record Payment
+        </a>
+        <a href="{% url 'add_expense' %}" class="btn btn-danger btn-rounded ms-2">
+            <i class="fas fa-minus-circle me-2"></i>Record Expense
+        </a>
+        <a href="{% url 'export_report_pdf' %}" class="btn btn-outline-primary btn-rounded ms-2">
+            <i class="fas fa-file-pdf me-2"></i>Export PDF
+        </a>
     </div>
 </div>
 
+<!-- Statistics Cards -->
+<div class="row g-4 mb-4">
+    <div class="col-md-4">
+        <div class="card shadow-4-strong text-center p-3 border-start border-success border-5">
+            <div class="text-success small fw-bold text-uppercase mb-1">Total Income</div>
+            <h3 class="fw-bold mb-0">₹{{ income }}</h3>
+            <div class="text-muted mini-text">Selected period</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card shadow-4-strong text-center p-3 border-start border-danger border-5">
+            <div class="text-danger small fw-bold text-uppercase mb-1">Total Expenses</div>
+            <h3 class="fw-bold mb-0">₹{{ expense_total }}</h3>
+            <div class="text-muted mini-text">Selected period</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card shadow-4-strong text-center p-3 border-start border-info border-5">
+            <div class="text-info small fw-bold text-uppercase mb-1">Net Profit</div>
+            <h3 class="fw-bold mb-0">₹{{ profit }}</h3>
+            <div class="text-muted mini-text">Selected period</div>
+        </div>
+    </div>
+</div>
+
+<!-- Filters -->
 <div class="card shadow-4-strong mb-4">
     <div class="card-body">
         <form method="get" class="row g-3 align-items-end">
             <div class="col-md-4">
-                <label class="form-label fw-bold small text-uppercase">From Date</label>
+                <label class="form-label fw-bold small text-uppercase">Start Date</label>
                 <input type="date" name="date_from" class="form-control" value="{{ date_from }}">
             </div>
             <div class="col-md-4">
-                <label class="form-label fw-bold small text-uppercase">To Date</label>
+                <label class="form-label fw-bold small text-uppercase">End Date</label>
                 <input type="date" name="date_to" class="form-control" value="{{ date_to }}">
             </div>
-            <div class="col-md-2">
-                <button type="submit" class="btn btn-primary w-100">Filter</button>
-            </div>
-            <div class="col-md-2">
+            <div class="col-md-4 d-flex">
+                <button type="submit" class="btn btn-primary w-100 me-2"><i
+                        class="fas fa-filter me-2"></i>Filter</button>
                 <a href="{% url 'finance' %}" class="btn btn-outline-secondary w-100">Reset</a>
             </div>
         </form>
     </div>
 </div>
 
-<h3>Expenses</h3>
-<div class="card shadow-4-strong">
-    <ul class="list-group list-group-flush">
-        {% for expense in page_obj %}
-        <li class="list-group-item d-flex justify-content-between align-items-center">
-            <div>
-                <span class="fw-bold">{{ expense.category }}</span>
-                <div class="text-muted small">{{ expense.date|date:"M d, Y" }}</div>
+<div class="row">
+    <!-- Payments Column -->
+    <div class="col-lg-6">
+        <div class="card shadow-4-strong mb-4">
+            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 fw-bold text-success"><i class="fas fa-arrow-down me-2"></i>Recent Payments</h5>
             </div>
-            <span class="badge bg-danger rounded-pill">₹{{ expense.amount }}</span>
-        </li>
-        {% empty %}
-        <li class="list-group-item text-center text-muted py-4">No expenses found for the selected period.</li>
-        {% endfor %}
-    </ul>
-
-    {% if page_obj.has_other_pages %}
-    <div class="card-footer bg-light">
-        <nav aria-label="Expense pagination">
-            <ul class="pagination pagination-sm mb-0 justify-content-center">
-                {% if page_obj.has_previous %}
-                <li class="page-item">
-                    <a class="page-link"
-                        href="?page={{ page_obj.previous_page_number }}&date_from={{ date_from }}&date_to={{ date_to }}">
-                        <i class="fas fa-chevron-left"></i>
-                    </a>
-                </li>
-                {% endif %}
-
-                {% for num in page_obj.paginator.page_range %}
-                {% if page_obj.number == num %}
-                <li class="page-item active"><span class="page-link">{{ num }}</span></li>
-                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %} <li class="page-item">
-                    <a class="page-link" href="?page={{ num }}&date_from={{ date_from }}&date_to={{ date_to }}">{{ num
-                        }}</a>
-                    </li>
-                    {% endif %}
-                    {% endfor %}
-
-                    {% if page_obj.has_next %}
-                    <li class="page-item">
-                        <a class="page-link"
-                            href="?page={{ page_obj.next_page_number }}&date_from={{ date_from }}&date_to={{ date_to }}">
-                            <i class="fas fa-chevron-right"></i>
-                        </a>
-                    </li>
-                    {% endif %}
-            </ul>
-        </nav>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0 align-middle">
+                        <thead class="bg-light">
+                            <tr>
+                                <th class="ps-4">Member</th>
+                                <th>Type</th>
+                                <th>Date</th>
+                                <th class="text-end pe-4">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for payment in payments %}
+                            <tr>
+                                <td class="ps-4">
+                                    <div class="fw-bold">{{ payment.member.user.username }}</div>
+                                    <div class="mini-text text-muted">{{ payment.member.membership_type }}</div>
+                                </td>
+                                <td>
+                                    <span class="badge rounded-pill bg-light text-success border border-success">
+                                        {{ payment.get_payment_type_display }}
+                                    </span>
+                                </td>
+                                <td>{{ payment.date|date:"d M, Y" }}</td>
+                                <td class="text-end pe-4 fw-bold">₹{{ payment.amount }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center py-4 text-muted">No payments recorded.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% if payments.has_other_pages %}
+            <div class="card-footer bg-white">
+                <nav>
+                    <ul class="pagination pagination-sm mb-0 justify-content-center">
+                        {% if payments.has_previous %}
+                        <li class="page-item"><a class="page-link"
+                                href="?payment_page={{ payments.previous_page_number }}&date_from={{ date_from }}&date_to={{ date_to }}">Prev</a>
+                        </li>
+                        {% endif %}
+                        <li class="page-item disabled"><span class="page-link">{{ payments.number }} of {{
+                                payments.paginator.num_pages }}</span></li>
+                        {% if payments.has_next %}
+                        <li class="page-item"><a class="page-link"
+                                href="?payment_page={{ payments.next_page_number }}&date_from={{ date_from }}&date_to={{ date_to }}">Next</a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+            {% endif %}
+        </div>
     </div>
-    {% endif %}
+
+    <!-- Expenses Column -->
+    <div class="col-lg-6">
+        <div class="card shadow-4-strong mb-4">
+            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 fw-bold text-danger"><i class="fas fa-arrow-up me-2"></i>Recent Expenses</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0 align-middle">
+                        <thead class="bg-light">
+                            <tr>
+                                <th class="ps-4">Category</th>
+                                <th>Description</th>
+                                <th>Date</th>
+                                <th class="text-end pe-4">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for expense in expenses %}
+                            <tr>
+                                <td class="ps-4">
+                                    <div class="fw-bold">{{ expense.get_category_display }}</div>
+                                </td>
+                                <td>
+                                    <div class="mini-text text-truncate" style="max-width: 150px;">{{
+                                        expense.description }}</div>
+                                </td>
+                                <td>{{ expense.date|date:"d M, Y" }}</td>
+                                <td class="text-end pe-4 fw-bold text-danger">₹{{ expense.amount }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center py-4 text-muted">No expenses recorded.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% if expenses.has_other_pages %}
+            <div class="card-footer bg-white">
+                <nav>
+                    <ul class="pagination pagination-sm mb-0 justify-content-center">
+                        {% if expenses.has_previous %}
+                        <li class="page-item"><a class="page-link"
+                                href="?expense_page={{ expenses.previous_page_number }}&date_from={{ date_from }}&date_to={{ date_to }}">Prev</a>
+                        </li>
+                        {% endif %}
+                        <li class="page-item disabled"><span class="page-link">{{ expenses.number }} of {{
+                                expenses.paginator.num_pages }}</span></li>
+                        {% if expenses.has_next %}
+                        <li class="page-item"><a class="page-link"
+                                href="?expense_page={{ expenses.next_page_number }}&date_from={{ date_from }}&date_to={{ date_to }}">Next</a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+            {% endif %}
+        </div>
+    </div>
 </div>
+
+<style>
+    .mini-text {
+        font-size: 0.75rem;
+    }
+
+    .btn-rounded {
+        border-radius: 50px;
+        padding-left: 1.5rem;
+        padding-right: 1.5rem;
+    }
+</style>
+
 {% endblock %}

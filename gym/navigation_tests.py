@@ -40,6 +40,12 @@ class ComprehensiveNavigationTests(TestCase):
         self._test_navigation(self.superuser, 'reports')
         self._test_navigation(self.superuser, 'notifications')
         self._test_navigation(self.superuser, 'branding_settings')
+        self._test_navigation(self.superuser, 'staff_list')
+        self._test_navigation(self.superuser, 'add_staff')
+        self._test_navigation(self.superuser, 'add_payment')
+        self._test_navigation(self.superuser, 'add_expense')
+        self._test_navigation(self.superuser, 'bulk_import_members')
+        self._test_navigation(self.superuser, 'download_member_import_sample')
 
     def test_trainer_navigation(self):
         # Trainer specific views

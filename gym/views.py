@@ -3,7 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.utils import timezone
 from core.models import CustomUser, MemberProfile, Attendance, Payment, Expense, ChatMessage, DietPlan, WorkoutVideo, LeaveRequest
-from .forms import VideoForm, DietPlanForm, LeaveRequestForm, MemberAddForm, MemberEditForm, TrainerAddForm, TrainerEditForm
+from .forms import VideoForm, DietPlanForm, LeaveRequestForm, MemberAddForm, MemberEditForm, TrainerAddForm, TrainerEditForm, StaffAddForm, StaffEditForm
 from django.db.models import Sum, Q, Count
 from django.core.paginator import Paginator
 from core.decorators import role_required
@@ -368,27 +368,41 @@ def mark_attendance(request):
 @login_required
 @role_required(['admin', 'tenant_admin', 'super_admin'])
 def finance_overview(request):
-        
     date_from = request.GET.get('date_from', '')
     date_to = request.GET.get('date_to', '')
     
     expenses_all = Expense.objects.all().order_by('-date')
+    payments_all = Payment.objects.all().order_by('-date')
+    
+    tenant = getattr(request, 'tenant', None)
+    if tenant:
+        expenses_all = expenses_all.filter(tenant=tenant)
+        payments_all = payments_all.filter(tenant=tenant)
     
     if date_from:
         expenses_all = expenses_all.filter(date__gte=date_from)
+        payments_all = payments_all.filter(date__gte=date_from)
     if date_to:
         expenses_all = expenses_all.filter(date__lte=date_to)
+        payments_all = payments_all.filter(date__lte=date_to)
         
-    income = Payment.objects.aggregate(Sum('amount'))['amount__sum'] or 0
+    income = payments_all.aggregate(Sum('amount'))['amount__sum'] or 0
     expense_total = expenses_all.aggregate(Sum('amount'))['amount__sum'] or 0
     profit = income - expense_total
     
-    paginator = Paginator(expenses_all, 15)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
+    # Paginate expenses
+    expense_paginator = Paginator(expenses_all, 10)
+    expense_page = request.GET.get('expense_page')
+    expenses_paged = expense_paginator.get_page(expense_page)
+    
+    # Paginate payments
+    payment_paginator = Paginator(payments_all, 10)
+    payment_page = request.GET.get('payment_page')
+    payments_paged = payment_paginator.get_page(payment_page)
     
     context = {
-        'page_obj': page_obj,
+        'expenses': expenses_paged,
+        'payments': payments_paged,
         'income': income,
         'expense_total': expense_total,
         'profit': profit,
@@ -396,6 +410,50 @@ def finance_overview(request):
         'date_to': date_to,
     }
     return render(request, 'gym/finance.html', context)
+    
+@login_required
+@role_required(['admin', 'tenant_admin', 'super_admin'])
+def add_payment(request):
+    """Admin manually adds a payment (e.g. cash)"""
+    from .forms import PaymentForm
+    
+    if request.method == 'POST':
+        form = PaymentForm(request.POST)
+        if form.is_valid():
+            payment = form.save(commit=False)
+            payment.tenant = getattr(request, 'tenant', None)
+            payment.save()
+            messages.success(request, f"Payment of {payment.amount} recorded for {payment.member.user.username}")
+            return redirect('finance')
+    else:
+        form = PaymentForm()
+        
+    return render(request, 'gym/payment_form.html', {
+        'form': form,
+        'title': 'Add Physical Payment'
+    })
+
+@login_required
+@role_required(['admin', 'tenant_admin', 'super_admin'])
+def add_expense(request):
+    """Admin adds an expense entry"""
+    from .forms import ExpenseForm
+    
+    if request.method == 'POST':
+        form = ExpenseForm(request.POST)
+        if form.is_valid():
+            expense = form.save(commit=False)
+            expense.tenant = getattr(request, 'tenant', None)
+            expense.save()
+            messages.success(request, f"Expense of {expense.amount} recorded under {expense.get_category_display()}")
+            return redirect('finance')
+    else:
+        form = ExpenseForm()
+        
+    return render(request, 'gym/expense_form.html', {
+        'form': form,
+        'title': 'Record Expense'
+    })
 
 @login_required
 def chat_room(request, room_name='general'):
@@ -752,6 +810,80 @@ def delete_trainer(request, trainer_id):
     return redirect('trainer_list')
 
 @login_required
+@role_required(['admin', 'tenant_admin', 'super_admin'])
+def staff_list(request):
+    search_query = request.GET.get('search', '')
+    staff_members = CustomUser.objects.filter(role='staff').order_by('username')
+    
+    if search_query:
+        staff_members = staff_members.filter(
+            Q(username__icontains=search_query) |
+            Q(email__icontains=search_query) |
+            Q(first_name__icontains=search_query) |
+            Q(last_name__icontains=search_query)
+        )
+    
+    paginator = Paginator(staff_members, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    context = {
+        'page_obj': page_obj,
+        'search_query': search_query,
+    }
+    return render(request, 'gym/staff_list.html', context)
+
+@login_required
+@role_required(['admin', 'tenant_admin', 'super_admin'])
+def add_staff(request):
+    if request.method == 'POST':
+        form = StaffAddForm(request.POST)
+        if form.is_valid():
+            if CustomUser.objects.filter(username=form.cleaned_data['username']).exists():
+                form.add_error('username', 'Username already exists.')
+            elif CustomUser.objects.filter(email=form.cleaned_data['email']).exists():
+                form.add_error('email', 'Email already exists.')
+            else:
+                try:
+                    user = CustomUser.objects.create_user(
+                        username=form.cleaned_data['username'],
+                        email=form.cleaned_data['email'],
+                        password=form.cleaned_data['password'],
+                        first_name=form.cleaned_data.get('first_name', ''),
+                        last_name=form.cleaned_data.get('last_name', ''),
+                        role='staff'
+                    )
+                    messages.success(request, 'Staff member added successfully!')
+                    return redirect('staff_list')
+                except Exception as e:
+                    messages.error(request, f'Error creating staff: {str(e)}')
+    else:
+        form = StaffAddForm()
+    return render(request, 'gym/staff_form.html', {'form': form, 'title': 'Add New Staff'})
+
+@login_required
+@role_required(['admin', 'tenant_admin', 'super_admin'])
+def edit_staff(request, staff_id):
+    staff = get_object_or_404(CustomUser, id=staff_id, role='staff')
+    if request.method == 'POST':
+        form = StaffEditForm(request.POST, instance=staff)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Staff member updated successfully!')
+            return redirect('staff_list')
+    else:
+        form = StaffEditForm(instance=staff)
+    return render(request, 'gym/staff_form.html', {'form': form, 'title': 'Edit Staff', 'is_edit': True})
+
+@login_required
+@role_required(['admin', 'tenant_admin', 'super_admin'])
+def delete_staff(request, staff_id):
+    staff = get_object_or_404(CustomUser, id=staff_id, role='staff')
+    staff.delete()
+    messages.success(request, 'Staff member deleted successfully!')
+    return redirect('staff_list')
+
+@login_required
 @role_required(['admin', 'tenant_admin', 'super_admin', 'trainer'])
 def leave_request_list(request):
         
@@ -892,6 +1024,53 @@ def whatsapp_history(request):
     return render(request, 'gym/whatsapp_history.html', context)
 
 @login_required
+@role_required(['admin', 'tenant_admin', 'super_admin', 'trainer'])
+def send_payment_reminder(request, member_id):
+    """Send WhatsApp payment reminder to a specific member"""
+    from .whatsapp_service import whatsapp_service
+    from core.models import MemberProfile, WhatsAppMessage
+    
+    member = get_object_or_404(MemberProfile, id=member_id)
+    
+    if not member.phone_number:
+        messages.error(request, f"Member {member.user.username} does not have a phone number.")
+        return redirect('member_list')
+        
+    if not whatsapp_service.is_configured():
+        messages.error(request, "WhatsApp service is not configured. Please contact administrator.")
+        return redirect('member_list')
+        
+    gym_name = member.tenant.name if member.tenant else "Your Gym"
+    amount = member.monthly_amount
+    due_date = member.next_payment_date.strftime('%B %d, %Y') if member.next_payment_date else "N/A"
+    
+    # Construct message
+    first_name = member.user.first_name or member.user.username
+    message_content = f"Hello {first_name}, this is a friendly reminder from {gym_name}. Your gym subscription payment of {amount} is due on {due_date}. Please clear it as soon as possible to continue your workouts. Thank you!"
+    
+    # Send message
+    result = whatsapp_service.send_message(member.phone_number, message_content)
+    
+    # Log the message in WhatsApp history
+    WhatsAppMessage.objects.create(
+        tenant=member.tenant,
+        sent_by=request.user,
+        recipients=[member.id],
+        message_content=message_content,
+        status='sent' if result['success'] else 'failed',
+        error_message=result.get('error', '') if not result['success'] else '',
+        recipient_count=1,
+        time_slot='payment_reminder'
+    )
+    
+    if result['success']:
+        messages.success(request, f"Payment reminder sent to {member.user.username} via WhatsApp!")
+    else:
+        messages.error(request, f"Failed to send WhatsApp reminder: {result.get('error')}")
+        
+    return redirect('member_list')
+
+@login_required
 @role_required(['admin', 'tenant_admin', 'super_admin'])
 def bulk_import_phones(request):
     """Bulk import phone numbers from CSV"""
@@ -979,6 +1158,120 @@ def bulk_import_phones(request):
     }
     return render(request, 'gym/bulk_import_phones.html', context)
 
+
+@login_required
+@role_required(['admin', 'tenant_admin', 'super_admin'])
+def bulk_import_members(request):
+    """Bulk import members from CSV"""
+    from .forms import BulkMemberImportForm
+    import csv
+    import io
+    from django.db import transaction
+    
+    if request.method == 'POST':
+        form = BulkMemberImportForm(request.POST, request.FILES)
+        if form.is_valid():
+            csv_file = request.FILES['csv_file']
+            try:
+                decoded_file = csv_file.read().decode('utf-8')
+                io_string = io.StringIO(decoded_file)
+                reader = csv.DictReader(io_string)
+                
+                success_count = 0
+                error_count = 0
+                errors = []
+                tenant = getattr(request, 'tenant', None)
+                
+                with transaction.atomic():
+                    for row_num, row in enumerate(reader, start=2):
+                        try:
+                            username = row.get('username', '').strip()
+                            email = row.get('email', '').strip()
+                            password = row.get('password', '').strip()
+                            first_name = row.get('first_name', '').strip()
+                            last_name = row.get('last_name', '').strip()
+                            
+                            if not username or not email or not password:
+                                errors.append(f"Row {row_num}: Missing username, email, or password")
+                                error_count += 1
+                                continue
+                            
+                            if CustomUser.objects.filter(username=username).exists():
+                                errors.append(f"Row {row_num}: Username '{username}' already exists")
+                                error_count += 1
+                                continue
+                                
+                            # Create User
+                            user = CustomUser.objects.create_user(
+                                username=username,
+                                email=email,
+                                password=password,
+                                first_name=first_name,
+                                last_name=last_name,
+                                role='member',
+                                tenant=tenant
+                            )
+                            
+                            # Create Profile
+                            MemberProfile.objects.create(
+                                user=user,
+                                tenant=tenant,
+                                membership_type=row.get('membership_type', 'monthly').lower(),
+                                age=int(row.get('age', 20)),
+                                phone_number=row.get('phone_number', ''),
+                                registration_amount=float(row.get('registration_amount', 0)),
+                                monthly_amount=float(row.get('monthly_amount', 0)),
+                                allotted_slot=row.get('allotted_slot', 'General'),
+                                address=row.get('address', ''),
+                                registration_date=timezone.now().date()
+                            )
+                            success_count += 1
+                            
+                        except Exception as e:
+                            errors.append(f"Row {row_num}: Error - {str(e)}")
+                            error_count += 1
+                
+                if success_count > 0:
+                    messages.success(request, f'Successfully imported {success_count} member(s)!')
+                
+                if error_count > 0:
+                    messages.warning(request, f'{error_count} error(s) occurred. Check details.')
+                    # You could show more details here if needed
+                
+                return redirect('member_list')
+                
+            except Exception as e:
+                messages.error(request, f'Error reading CSV file: {str(e)}')
+    else:
+        form = BulkMemberImportForm()
+        
+    return render(request, 'gym/bulk_import_members.html', {'form': form})
+
+
+@login_required
+@role_required(['admin', 'tenant_admin', 'super_admin'])
+def download_member_import_sample(request):
+    """Download a sample CSV for bulk member import"""
+    import csv
+    from django.http import HttpResponse
+    
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="member_import_sample.csv"'
+    
+    writer = csv.writer(response)
+    # Header row
+    writer.writerow([
+        'username', 'email', 'password', 'first_name', 'last_name', 
+        'membership_type', 'age', 'phone_number', 'registration_amount', 
+        'monthly_amount', 'allotted_slot', 'address'
+    ])
+    # Sample data row
+    writer.writerow([
+        'john_doe', 'john@example.com', 'password123', 'John', 'Doe', 
+        'monthly', '25', '+1234567890', '1000', '500', '6:00 AM - 7:00 AM', '123 Gym Street'
+    ])
+    
+    return response
 
 @login_required
 @role_required(['admin', 'tenant_admin', 'super_admin'])

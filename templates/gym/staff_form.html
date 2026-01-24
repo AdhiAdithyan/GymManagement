@@ -4,8 +4,8 @@
 <div class="row justify-content-center">
     <div class="col-lg-8 col-md-10 col-sm-12">
         <div class="card shadow-4-strong">
-            <div class="card-header bg-info text-white py-3">
-                <h5 class="mb-0 fw-bold"><i class="fas fa-chalkboard-teacher me-2"></i>{{ title }}</h5>
+            <div class="card-header bg-secondary text-white py-3">
+                <h5 class="mb-0 fw-bold"><i class="fas fa-broom me-2"></i>{{ title }}</h5>
             </div>
             <div class="card-body p-4">
                 <form method="post">
@@ -76,10 +76,10 @@
                     {% endif %}
 
                     <div class="d-grid gap-2 mt-4">
-                        <button type="submit" class="btn btn-info btn-lg text-white">
-                            {% if is_edit %}Update Trainer{% else %}Create Trainer{% endif %}
+                        <button type="submit" class="btn btn-secondary btn-lg text-white">
+                            {% if is_edit %}Update Staff{% else %}Create Staff{% endif %}
                         </button>
-                        <a href="{% url 'trainer_list' %}" class="btn btn-light btn-lg">Cancel</a>
+                        <a href="{% url 'staff_list' %}" class="btn btn-light btn-lg">Cancel</a>
                     </div>
                 </form>
             </div>

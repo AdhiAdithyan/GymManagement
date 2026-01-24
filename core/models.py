@@ -44,6 +44,8 @@ class BrandingConfig(models.Model):
     
     # Feature toggles
     features = models.JSONField(default=dict, help_text="Feature flags as JSON")
+    enable_auto_whatsapp_reminders = models.BooleanField(default=False, help_text="Automatically send WhatsApp payment reminders")
+    whatsapp_reminder_days_before = models.PositiveIntegerField(default=7, help_text="Send reminder X days before the due date")
     
     class Meta:
         db_table = 'branding_configs'
@@ -151,7 +153,7 @@ class Payment(models.Model):
     tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE, null=True, blank=True)
     member = models.ForeignKey(MemberProfile, on_delete=models.CASCADE, related_name='payments')
     amount = models.DecimalField(max_digits=10, decimal_places=2)
-    date = models.DateField(auto_now_add=True)
+    date = models.DateField(default=timezone.now)
     payment_type = models.CharField(max_length=20, choices=PAYMENT_TYPES)
     remarks = models.TextField(blank=True)
 

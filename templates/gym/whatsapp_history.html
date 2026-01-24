@@ -17,18 +17,18 @@
                 <label class="form-label fw-bold small text-uppercase">Status</label>
                 <select name="status" class="form-select">
                     <option value="">All Statuses</option>
-                    <option value="sent" {% if status_filter=='sent' %}selected{% endif %}>Sent</option>
-                    <option value="failed" {% if status_filter=='failed' %}selected{% endif %}>Failed</option>
-                    <option value="pending" {% if status_filter=='pending' %}selected{% endif %}>Pending</option>
+                    <option value="sent" {% if status_filter == 'sent' %}selected{% endif %}>Sent</option>
+                    <option value="failed" {% if status_filter == 'failed' %}selected{% endif %}>Failed</option>
+                    <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
                 </select>
             </div>
             <div class="col-md-4">
                 <label class="form-label fw-bold small text-uppercase">Time Slot</label>
                 <select name="slot" class="form-select">
                     <option value="">All Slots</option>
-                    <option value="all" {% if slot_filter=='all' %}selected{% endif %}>All Members</option>
+                    <option value="all" {% if slot_filter == 'all' %}selected{% endif %}>All Members</option>
                     {% for slot in time_slots %}
-                    <option value="{{ slot }}" {% if slot_filter==slot %}selected{% endif %}>{{ slot }}</option>
+                    <option value="{{ slot }}" {% if slot_filter == slot %}selected{% endif %}>{{ slot }}</option>
                     {% endfor %}
                 </select>
             </div>
