@@ -1,0 +1,320 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}AI Diet Plan Generator{% endblock %}
+
+{% block extra_css %}
+<style>
+    .ai-container {
+        max-width: 900px;
+        margin: 3rem auto;
+        padding: 0 1rem;
+    }
+
+    .ai-header {
+        text-align: center;
+        margin-bottom: 3rem;
+    }
+
+    .ai-header h1 {
+        font-size: 2.5rem;
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 1rem;
+    }
+
+    .ai-header p {
+        color: #666;
+        font-size: 1.1rem;
+    }
+
+    .ai-card {
+        background: white;
+        border-radius: 20px;
+        padding: 2.5rem;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .ai-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 6px;
+        background: linear-gradient(90deg, #10b981, #059669);
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        color: #333;
+    }
+
+    .form-control,
+    .form-select {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 2px solid #e0e0e0;
+        border-radius: 12px;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+        border-color: #10b981;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+    }
+
+    .checkbox-group {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 1rem;
+        margin-top: 0.5rem;
+    }
+
+    .checkbox-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem;
+        border: 1px solid #e0e0e0;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .checkbox-item:hover {
+        background: #f0fdf4;
+        border-color: #10b981;
+    }
+
+    .checkbox-item input[type="checkbox"] {
+        accent-color: #10b981;
+        width: 18px;
+        height: 18px;
+    }
+
+    .btn-generate {
+        width: 100%;
+        padding: 1rem;
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+
+    .btn-generate:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4);
+    }
+
+    .btn-generate:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .feature-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin-top: 3rem;
+    }
+
+    .feature-item {
+        text-align: center;
+        padding: 1.5rem;
+        background: #f8f9fa;
+        border-radius: 12px;
+        transition: transform 0.3s ease;
+    }
+
+    .feature-item:hover {
+        transform: translateY(-5px);
+    }
+
+    .feature-icon {
+        font-size: 2rem;
+        margin-bottom: 1rem;
+        display: inline-block;
+    }
+
+    .processing-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.9);
+        z-index: 9999;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+    }
+
+    .brain-loader {
+        width: 80px;
+        height: 80px;
+        margin-bottom: 2rem;
+        position: relative;
+    }
+
+    .brain-pulse {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, #10b981, #059669);
+        border-radius: 50%;
+        opacity: 0.2;
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+        0% {
+            transform: scale(1);
+            opacity: 0.2;
+        }
+
+        50% {
+            transform: scale(1.5);
+            opacity: 0.1;
+        }
+
+        100% {
+            transform: scale(1);
+            opacity: 0.2;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="ai-container">
+    <div class="ai-header">
+        <h1>AI Nutrition Planner</h1>
+        <p>Get a personalized diet plan tailored to your nutritional needs and preferences, powered by Gemini AI.</p>
+    </div>
+
+    <div class="ai-card">
+        {% if not api_key_configured %}
+        <div class="alert alert-warning" role="alert"
+            style="background: #fff3cd; color: #856404; padding: 1rem; border-radius: 8px; margin-bottom: 2rem;">
+            <strong>Configuration Needed:</strong> The Gemini AI API key is not configured. The system will use fallback
+            plans.
+        </div>
+        {% endif %}
+
+        <form method="post" id="dietForm" onsubmit="showLoader()">
+            {% csrf_token %}
+
+            <div class="form-group">
+                <label class="form-label">What is your primary nutrition goal?</label>
+                <select name="goal" class="form-select" required>
+                    <option value="" disabled selected>Select a goal...</option>
+                    <option value="weight_loss">Weight Loss</option>
+                    <option value="muscle_gain">Muscle Gain</option>
+                    <option value="maintenance">Maintain Weight</option>
+                    <option value="energy">Increase Energy</option>
+                    <option value="healthy_eating">Better Eating Habits</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Dietary Restrictions & Preferences</label>
+                <div class="checkbox-group">
+                    <label class="checkbox-item">
+                        <input type="checkbox" name="dietary_restrictions" value="vegetarian"> Vegetarian
+                    </label>
+                    <label class="checkbox-item">
+                        <input type="checkbox" name="dietary_restrictions" value="vegan"> Vegan
+                    </label>
+                    <label class="checkbox-item">
+                        <input type="checkbox" name="dietary_restrictions" value="gluten_free"> Gluten-Free
+                    </label>
+                    <label class="checkbox-item">
+                        <input type="checkbox" name="dietary_restrictions" value="dairy_free"> Dairy-Free
+                    </label>
+                    <label class="checkbox-item">
+                        <input type="checkbox" name="dietary_restrictions" value="keto"> Keto
+                    </label>
+                    <label class="checkbox-item">
+                        <input type="checkbox" name="dietary_restrictions" value="paleo"> Paleo
+                    </label>
+                    <label class="checkbox-item">
+                        <input type="checkbox" name="dietary_restrictions" value="pescatarian"> Pescatarian
+                    </label>
+                    <label class="checkbox-item">
+                        <input type="checkbox" name="dietary_restrictions" value="halal"> Halal
+                    </label>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-generate">
+                <span class="btn-text">Generate Diet Plan</span>
+                <span class="icon">🥗</span>
+            </button>
+        </form>
+    </div>
+
+    <div class="feature-list">
+        <div class="feature-item">
+            <div class="feature-icon">🥦</div>
+            <h3>Balanced</h3>
+            <p>Perfect macro distribution for your goals</p>
+        </div>
+        <div class="feature-item">
+            <div class="feature-icon">🍳</div>
+            <h3>Practical</h3>
+            <p>Easy-to-prepare meal suggestions</p>
+        </div>
+        <div class="feature-item">
+            <div class="feature-icon">💧</div>
+            <h3>Holistic</h3>
+            <p>Includes hydration and supplement tips</p>
+        </div>
+    </div>
+</div>
+
+<div class="processing-overlay" id="processingOverlay">
+    <div class="brain-loader">
+        <div class="brain-pulse"></div>
+        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 2rem;">🧠
+        </div>
+    </div>
+    <h2>Designing Your Diet...</h2>
+    <p style="color: #666; width: 600px;">Calculating macros and selecting optimal meals. This usually takes about 10-15
+        seconds.</p>
+</div>
+
+<script>
+    function showLoader() {
+        const form = document.getElementById('dietForm');
+        if (form.checkValidity()) {
+            document.getElementById('processingOverlay').style.display = 'flex';
+        }
+    }
+</script>
+{% endblock %}

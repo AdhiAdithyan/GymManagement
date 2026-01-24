@@ -18,6 +18,7 @@ twilio>=8.0.0
 
 # PDF Generation
 xhtml2pdf==0.2.11
+markdown>=3.5.0
 
 # Deployment & Production
 gunicorn

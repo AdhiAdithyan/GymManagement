@@ -34,7 +34,7 @@ class AnalyticsService:
         # 1. Attendance Score (30 points)
         attendance_count = Attendance.objects.filter(
             member=member,
-            timestamp__gte=thirty_days_ago
+            date__gte=thirty_days_ago.date()
         ).count()
         
         # Expected: 12 visits per month (3x/week)
@@ -62,9 +62,9 @@ class AnalyticsService:
         score += workout_score
         
         # 4. Recency Score (15 points)
-        last_visit = Attendance.objects.filter(member=member).order_by('-timestamp').first()
+        last_visit = Attendance.objects.filter(member=member).order_by('-date', '-check_in_time').first()
         if last_visit:
-            days_since_visit = (now - last_visit.timestamp).days
+            days_since_visit = (now.date() - last_visit.date).days
             if days_since_visit <= 3:
                 recency_score = 15
             elif days_since_visit <= 7:
@@ -102,8 +102,8 @@ class AnalyticsService:
         thirty_days_ago = now - timedelta(days=30)
         
         # Check last visit
-        last_visit = Attendance.objects.filter(member=member).order_by('-timestamp').first()
-        days_since_visit = (now - last_visit.timestamp).days if last_visit else 999
+        last_visit = Attendance.objects.filter(member=member).order_by('-date', '-check_in_time').first()
+        days_since_visit = (now.date() - last_visit.date).days if last_visit else 999
         
         # Check payment status
         overdue_payments = SubscriptionPayment.objects.filter(
@@ -131,12 +131,12 @@ class AnalyticsService:
         # Attendance insights
         attendance_30d = Attendance.objects.filter(
             member=member,
-            timestamp__gte=thirty_days_ago
+            date__gte=thirty_days_ago.date()
         ).count()
         
         attendance_90d = Attendance.objects.filter(
             member=member,
-            timestamp__gte=ninety_days_ago
+            date__gte=ninety_days_ago.date()
         ).count()
         
         # Workout insights
@@ -188,7 +188,8 @@ class AnalyticsService:
         total_members = MemberProfile.objects.filter(tenant=tenant).count()
         active_members = Attendance.objects.filter(
             member__tenant=tenant,
-            timestamp__gte=thirty_days_ago
+
+            date__gte=thirty_days_ago.date()
         ).values('member').distinct().count()
         
         # Revenue stats
@@ -235,8 +236,9 @@ class AnalyticsService:
             churn_risk = AnalyticsService.predict_churn_risk(member)
             
             # Get last visit
-            last_visit = Attendance.objects.filter(member=member).order_by('-timestamp').first()
-            days_since_visit = (timezone.now() - last_visit.timestamp).days if last_visit else 999
+            # Get last visit
+            last_visit = Attendance.objects.filter(member=member).order_by('-date', '-check_in_time').first()
+            days_since_visit = (timezone.now().date() - last_visit.date).days if last_visit else 999
             
             # Check payment status
             has_overdue = SubscriptionPayment.objects.filter(
@@ -251,7 +253,7 @@ class AnalyticsService:
                     'overall_score': score,
                     'attendance_score': min((Attendance.objects.filter(
                         member=member,
-                        timestamp__gte=timezone.now() - timedelta(days=30)
+                        date__gte=(timezone.now() - timedelta(days=30)).date()
                     ).count() / 12) * 30, 30),
                     'workout_score': min((WorkoutLog.objects.filter(
                         member=member,

@@ -1,0 +1,233 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Your Workout Plan{% endblock %}
+
+{% block extra_css %}
+<style>
+    .plan-container {
+        max-width: 1200px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+    }
+
+    .plan-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 3rem;
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        margin-bottom: 2rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .plan-header h1 {
+        margin: 0 0 1rem 0;
+        font-size: 2.5rem;
+    }
+
+    .plan-meta {
+        display: flex;
+        gap: 2rem;
+        flex-wrap: wrap;
+    }
+
+    .meta-item {
+        background: rgba(255, 255, 255, 0.2);
+        padding: 0.5rem 1rem;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .daily-routine {
+        background: white;
+        border-radius: 15px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        border: 1px solid #f0f0f0;
+    }
+
+    .day-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid #f8f9fa;
+    }
+
+    .day-title {
+        font-size: 1.5rem;
+        color: #333;
+        font-weight: 700;
+    }
+
+    .focus-badge {
+        background: #e7f3ff;
+        color: #0d6efd;
+        padding: 0.4rem 1rem;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+
+    .exercise-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .exercise-table th {
+        text-align: left;
+        padding: 1rem;
+        color: #666;
+        font-weight: 600;
+        border-bottom: 1px solid #eee;
+    }
+
+    .exercise-table td {
+        padding: 1rem;
+        border-bottom: 1px solid #f8f9fa;
+        color: #333;
+    }
+
+    .exercise-table tr:last-child td {
+        border-bottom: none;
+    }
+
+    .recommendations-card {
+        background: #f8f9fa;
+        border-radius: 15px;
+        padding: 2rem;
+        margin-top: 2rem;
+    }
+
+    .btn-action {
+        padding: 0.8rem 1.5rem;
+        border-radius: 10px;
+        border: none;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .btn-primary {
+        background: #667eea;
+        color: white;
+    }
+
+    .btn-secondary {
+        background: white;
+        color: #667eea;
+    }
+
+    .actions-bar {
+        margin-top: 2rem;
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="plan-container">
+    {% if plan %}
+    <div class="plan-header">
+        <h1>{{ plan.plan_name }}</h1>
+        <p style="font-size: 1.1rem; opacity: 0.9; margin-bottom: 2rem;">
+            A {{ plan.duration_weeks }}-week program tailored for {{ plan.goals|title }}
+        </p>
+
+        <div class="plan-meta">
+            <div class="meta-item">
+                <span>📅</span> {{ plan.weeks|length }} Weeks
+            </div>
+            <div class="meta-item">
+                <span>💪</span> Duration: {{ plan.duration_weeks }} Weeks
+            </div>
+            <div class="meta-item">
+                <span>🎯</span> Goal: {{ plan.goals|title }}
+            </div>
+        </div>
+    </div>
+
+    <!-- Weekly Schedule -->
+    {% for week in plan.weeks %}
+    <div class="week-section" style="margin-bottom: 3rem;">
+        <h2 style="color: #4a5568; margin-bottom: 1.5rem; border-left: 5px solid #667eea; padding-left: 1rem;">
+            Week {{ week.week_number }}: {{ week.focus }}
+        </h2>
+
+        {% for workout in week.workouts %}
+        <div class="daily-routine">
+            <div class="day-header">
+                <div class="day-title">{{ workout.day }} <span style="font-size: 0.8em; opacity: 0.7;">- {{
+                        workout.workout_name }}</span></div>
+            </div>
+
+            <table class="exercise-table">
+                <thead>
+                    <tr>
+                        <th style="width: 40%;">Exercise</th>
+                        <th style="width: 15%;">Sets</th>
+                        <th style="width: 15%;">Reps</th>
+                        <th style="width: 15%;">Rest (s)</th>
+                        <th style="width: 15%;">Notes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for exercise in workout.exercises %}
+                    <tr>
+                        <td><strong>{{ exercise.name }}</strong></td>
+                        <td>{{ exercise.sets }}</td>
+                        <td>{{ exercise.reps }}</td>
+                        <td>{{ exercise.rest_seconds }}</td>
+                        <td style="font-size: 0.9rem; color: #666;">{{ exercise.notes|default:"-" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endfor %}
+    </div>
+    {% endfor %}
+
+    <!-- Recommendations -->
+    <div class="recommendations-card">
+        <h3>💡 Pro Tips for Success</h3>
+        <ul style="margin-top: 1rem; padding-left: 1.5rem; line-height: 1.6;">
+            <li>Stay hydrated and maintain proper form throughout all exercises.</li>
+            <li>Progressively overload by increasing weight or reps each week.</li>
+            <li>Sleep 7-8 hours per night for optimal recovery.</li>
+            <li>Ensure you're eating enough protein to support muscle recovery.</li>
+        </ul>
+    </div>
+
+    <div class="actions-bar">
+        <a href="{% url 'ai_workout_plan' %}" class="btn-action btn-secondary" style="border: 2px solid #667eea;">
+            🔄 Regenerate
+        </a>
+        <button onclick="window.print()" class="btn-action btn-primary">
+            🖨️ Print / Save PDF
+        </button>
+        <a href="{% url 'dashboard' %}" class="btn-action btn-secondary" style="background: #f8f9fa; color: #333;">
+            🏠 Back to Dashboard
+        </a>
+    </div>
+
+    {% else %}
+    <div style="text-align: center; padding: 4rem;">
+        <h2>No plan found</h2>
+        <a href="{% url 'ai_workout_plan' %}" class="btn-action btn-primary">Generate a Plan</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

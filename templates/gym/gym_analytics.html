@@ -1,0 +1,231 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Gym Analytics{% endblock %}
+
+{% block extra_css %}
+<style>
+    .analytics-container {
+        max-width: 1400px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+    }
+
+    .analytics-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+    }
+
+    .analytics-header h1 {
+        font-size: 2rem;
+        color: #1a202c;
+    }
+
+    .grid-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 12px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        border: 1px solid #e2e8f0;
+    }
+
+    .stat-label {
+        color: #718096;
+        font-size: 0.875rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-number {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #2d3748;
+    }
+
+    .stat-change {
+        font-size: 0.875rem;
+        margin-left: 0.5rem;
+    }
+
+    .change-up {
+        color: #48bb78;
+    }
+
+    .change-down {
+        color: #f56565;
+    }
+
+    .grid-charts {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 1.5rem;
+    }
+
+    .chart-card {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 12px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        border: 1px solid #e2e8f0;
+    }
+
+    .risk-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 1rem;
+    }
+
+    .risk-table th {
+        text-align: left;
+        padding: 0.75rem;
+        border-bottom: 2px solid #e2e8f0;
+        color: #4a5568;
+    }
+
+    .risk-table td {
+        padding: 0.75rem;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .risk-badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .badge-critical {
+        background: #fed7d7;
+        color: #9b2c2c;
+    }
+
+    .badge-high {
+        background: #feebc8;
+        color: #9c4221;
+    }
+
+    .badge-medium {
+        background: #faf089;
+        color: #975a16;
+    }
+
+    .badge-low {
+        background: #c6f6d5;
+        color: #276749;
+    }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="analytics-container">
+    <div class="analytics-header">
+        <h1>Gym Analytics Overview</h1>
+        <button class="btn btn-primary" onclick="window.print()">Export Report</button>
+    </div>
+
+    <!-- Key Metrics -->
+    <div class="grid-stats">
+        <div class="stat-card">
+            <div class="stat-label">Total Members</div>
+            <div class="stat-number">{{ analytics.total_members|default:0 }}</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Active Members</div>
+            <div class="stat-number">{{ analytics.active_members|default:0 }}</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Avg Engagement</div>
+            <div class="stat-number">{{ analytics.avg_engagement|default:0 }}%</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Est. Revenue</div>
+            <div class="stat-number">${{ analytics.est_revenue|default:0 }}</div>
+        </div>
+    </div>
+
+    <div class="grid-charts">
+        <!-- Churn Risk Distribution -->
+        <div class="chart-card">
+            <h3>At-Risk Members (Churn Prediction)</h3>
+            <div style="height: 300px; display: flex; justify-content: center;">
+                <canvas id="churnChart"></canvas>
+            </div>
+        </div>
+
+        <!-- High Risk Members List -->
+        <div class="chart-card">
+            <h3>High Risk Members</h3>
+            <div style="overflow-y: auto; max-height: 300px;">
+                <table class="risk-table">
+                    <thead>
+                        <tr>
+                            <th>Member</th>
+                            <th>Risk Level</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for member in analytics.high_risk_members %}
+                        <tr>
+                            <td>{{ member.user.get_full_name|default:member.user.username }}</td>
+                            <td><span class="risk-badge badge-critical">Critical</span></td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="2" style="text-align:center; color: #718096;">No high risk members detection.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const ctx = document.getElementById('churnChart').getContext('2d');
+        const churnData = {{ analytics.churn_risk_distribution| safe |default: "{}"
+    }};
+
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Low Risk', 'Medium Risk', 'High Risk', 'Critical'],
+            datasets: [{
+                data: [
+                    churnData.low || 0,
+                    churnData.medium || 0,
+                    churnData.high || 0,
+                    churnData.critical || 0
+                ],
+                backgroundColor: [
+                    '#48bb78', // Green
+                    '#ecc94b', // Yellow
+                    '#ed8936', // Orange
+                    '#f56565'  // Red
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'bottom' }
+            }
+        }
+    });
+    });
+</script>
+{% endblock %}

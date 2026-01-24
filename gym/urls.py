@@ -2,6 +2,7 @@ from django.urls import path
 from . import views
 from . import payment_views  # Import payment views
 from . import booking_views  # Import booking views
+from . import ai_views       # Import AI views
 
 urlpatterns = [
     path('', views.dashboard, name='dashboard'),
@@ -69,4 +70,14 @@ urlpatterns = [
     
     # Admin/Trainer Booking Routes
     path('admin/schedules/', booking_views.manage_class_schedules, name='manage_class_schedules'),
-]
+
+    # ============================================
+    # PHASE 2 MODERNIZATION - AI ROUTES
+    # ============================================
+    path('ai/workout/generate/', ai_views.ai_workout_plan, name='ai_workout_plan'),
+    path('ai/workout/view/', ai_views.view_workout_plan, name='view_workout_plan'),
+    path('ai/diet/generate/', ai_views.ai_diet_plan, name='ai_diet_plan'),
+    path('ai/diet/view/', ai_views.view_diet_plan, name='view_diet_plan'),
+    path('ai/analytics/member/', ai_views.member_insights, name='member_insights'),
+    path('ai/analytics/gym/', ai_views.gym_analytics, name='gym_analytics'),
+] # Phase 2 Routes Loaded
