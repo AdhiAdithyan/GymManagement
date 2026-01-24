@@ -1,0 +1,20 @@
+{% if logs %}
+<div class="list-group">
+    {% for log in logs %}
+    <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+        <div>
+            <h6 class="mb-1">{{ log.exercise.name }}</h6>
+            <small class="text-muted">
+                {% if log.sets %}{{ log.sets }} sets x {% endif %}
+                {% if log.reps %}{{ log.reps }} reps{% endif %}
+                {% if log.weight %} @ {{ log.weight }}kg{% endif %}
+                {% if log.duration_minutes %}{{ log.duration_minutes }} mins{% endif %}
+            </small>
+        </div>
+        <small class="text-muted">{{ log.logged_at|timesince }} ago</small>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<p class="text-muted text-center p-3">No workouts logged yet. Start today!</p>
+{% endif %}

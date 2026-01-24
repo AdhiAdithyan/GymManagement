@@ -1,0 +1,181 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Log Workout{% endblock %}
+
+{% block extra_css %}
+<style>
+    .log-container {
+        max-width: 1000px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+    }
+
+    .log-header {
+        background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+        color: white;
+        padding: 3rem;
+        border-radius: 20px;
+        box-shadow: 0 10px 25px rgba(37, 99, 235, 0.3);
+        margin-bottom: 2rem;
+        text-align: center;
+    }
+
+    .log-header h1 {
+        font-weight: 800;
+        margin-bottom: 0.5rem;
+    }
+
+    .log-card {
+        background: white;
+        border-radius: 20px;
+        padding: 2.5rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        border: 1px solid #f3f4f6;
+    }
+
+    .form-label {
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 0.5rem;
+    }
+
+    .form-control,
+    .form-select {
+        border-radius: 12px;
+        padding: 0.8rem 1rem;
+        border: 1px solid #e5e7eb;
+        transition: all 0.2s;
+        font-size: 1rem;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+        border-color: #2563EB;
+        box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+    }
+
+    .btn-log {
+        background: linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%);
+        color: white;
+        border: none;
+        padding: 1rem;
+        border-radius: 12px;
+        font-weight: 700;
+        width: 100%;
+        transition: transform 0.2s;
+        box-shadow: 0 4px 6px rgba(37, 99, 235, 0.2);
+    }
+
+    .btn-log:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 12px rgba(37, 99, 235, 0.3);
+    }
+
+    .recent-activity-card {
+        background: #f9fafb;
+        border-radius: 20px;
+        border: 1px solid #e5e7eb;
+        overflow: hidden;
+    }
+
+    .recent-header {
+        padding: 1.5rem;
+        border-bottom: 1px solid #e5e7eb;
+        background: white;
+        font-weight: 700;
+        color: #1f2937;
+    }
+
+    .list-group-item {
+        border: none;
+        border-bottom: 1px solid #f3f4f6;
+        padding: 1rem 1.5rem;
+        background: transparent;
+    }
+
+    .list-group-item:last-child {
+        border-bottom: none;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="log-container">
+    <div class="log-header">
+        <h1>Log Your Workout</h1>
+        <p style="opacity: 0.9;">Track your progress and crush your goals!</p>
+    </div>
+
+    <div class="row g-4">
+        <!-- Log Form -->
+        <div class="col-lg-7">
+            <div class="log-card">
+                <form method="post" hx-post="{% url 'log_workout' %}" hx-target="#workout-history"
+                    hx-on::after-request="this.reset()">
+                    {% csrf_token %}
+
+                    <div class="mb-4">
+                        <label class="form-label">Select Exercise</label>
+                        <select name="exercise" class="form-select" required>
+                            <option value="">Choose exercise...</option>
+                            {% for exercise in exercises %}
+                            <option value="{{ exercise.id }}">{{ exercise.name }} ({{ exercise.category }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-4">
+                            <label class="form-label">Sets</label>
+                            <input type="number" name="sets" class="form-control" placeholder="0">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Reps</label>
+                            <input type="number" name="reps" class="form-control" placeholder="0">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Weight (kg)</label>
+                            <input type="number" name="weight" step="0.5" class="form-control" placeholder="0.0">
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label">Duration (minutes) <span
+                                class="text-muted fw-normal small ms-2">(Optional, for cardio)</span></label>
+                        <input type="number" name="duration" class="form-control" placeholder="0">
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label">Notes</label>
+                        <textarea name="notes" class="form-control" rows="3"
+                            placeholder="How did it feel? Any pain or PRs?"></textarea>
+                    </div>
+
+                    <button type="submit" class="btn-log">
+                        <i class="fas fa-plus-circle me-2"></i> Log Entry
+                    </button>
+
+                    <div id="loading-indicator" class="htmx-indicator text-center mt-3">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Recent History -->
+        <div class="col-lg-5">
+            <div class="recent-activity-card h-100">
+                <div class="recent-header">
+                    <span>🕒 Recent Activity</span>
+                </div>
+                <div class="" id="workout-history">
+                    {% include 'gym/partials/workout_history_list.html' with logs=logs %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

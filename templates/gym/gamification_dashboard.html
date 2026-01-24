@@ -1,0 +1,281 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Gamification Dashboard{% endblock %}
+
+{% block extra_css %}
+<style>
+    .game-container {
+        max-width: 1200px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+    }
+
+    .game-header {
+        background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+        color: white;
+        padding: 3rem;
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(245, 158, 11, 0.3);
+        margin-bottom: 2rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .level-badge {
+        background: rgba(255, 255, 255, 0.2);
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-weight: 700;
+        backdrop-filter: blur(5px);
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 3rem;
+    }
+
+    .stat-card {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 15px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        border: 1px solid #f3f4f6;
+        transition: transform 0.2s;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .stat-icon {
+        font-size: 2rem;
+        margin-bottom: 1rem;
+    }
+
+    .section-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #1f2937;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .pb-list {
+        background: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    }
+
+    .pb-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem 0;
+        border-bottom: 1px solid #f3f4f6;
+    }
+
+    .pb-item:last-child {
+        border-bottom: none;
+    }
+
+    .pb-value {
+        font-weight: 700;
+        color: #F59E0B;
+        font-size: 1.2rem;
+    }
+
+    .badge-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+        gap: 1rem;
+    }
+
+    .badge-item {
+        text-align: center;
+        padding: 1rem;
+        background: #f8fafc;
+        border-radius: 12px;
+        border: 1px solid #e2e8f0;
+    }
+
+    .badge-icon {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .badge-name {
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: #4b5563;
+        line-height: 1.2;
+    }
+
+    .action-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-top: 2rem;
+    }
+
+    .game-btn {
+        padding: 1rem;
+        border-radius: 12px;
+        background: white;
+        border: 2px solid #e5e7eb;
+        text-align: center;
+        font-weight: 600;
+        color: #374151;
+        text-decoration: none;
+        transition: all 0.2s;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .game-btn:hover {
+        border-color: #F59E0B;
+        color: #F59E0B;
+        background: #fffbeb;
+    }
+
+    .game-btn i {
+        font-size: 1.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="game-container">
+    <div class="game-header">
+        <div
+            style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem;">
+            <div>
+                <h1 style="margin: 0; font-size: 2.5rem; margin-bottom: 0.5rem;">Fitness Journey</h1>
+                <p style="opacity: 0.9; margin: 0;">Level Up Your Fitness!</p>
+            </div>
+            <div class="level-badge">
+                <span style="font-size: 1.5rem;">⭐</span>
+                <span style="font-size: 1.2rem;">Level {{ level|default:1 }}</span>
+            </div>
+        </div>
+
+        <div style="margin-top: 2rem;">
+            <div style="background: rgba(255,255,255,0.2); height: 10px; border-radius: 5px; overflow: hidden;">
+                <div style="background: white; height: 100%; width: 70%;"></div>
+            </div>
+            <div
+                style="display: flex; justify-content: space-between; margin-top: 0.5rem; font-size: 0.9rem; opacity: 0.9;">
+                <span>{{ points|default:0 }} XP</span>
+                <span>Next Level: {{ level|default:1|add:1 }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon">🔥</div>
+            <h3 style="font-size: 1.1rem; color: #6b7280; margin-bottom: 0.2rem;">Total Workouts</h3>
+            <p style="font-size: 1.8rem; font-weight: 700; color: #1f2937; margin: 0;">{{ recent_logs|length|default:0
+                }}</p>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">🏆</div>
+            <h3 style="font-size: 1.1rem; color: #6b7280; margin-bottom: 0.2rem;">Achievements</h3>
+            <p style="font-size: 1.8rem; font-weight: 700; color: #1f2937; margin: 0;">{{ achievements|length|default:0
+                }}</p>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">💪</div>
+            <h3 style="font-size: 1.1rem; color: #6b7280; margin-bottom: 0.2rem;">Personal Bests</h3>
+            <p style="font-size: 1.8rem; font-weight: 700; color: #1f2937; margin: 0;">{{ pbs|length|default:0 }}</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Recent Personal Bests -->
+        <div class="col-md-8 mb-4">
+            <div class="section-title">
+                <span>🥇</span> Personal Records
+            </div>
+            <div class="pb-list">
+                {% for pb in pbs %}
+                <div class="pb-item">
+                    <div>
+                        <div style="font-weight: 600; color: #374151;">{{ pb.exercise.name }}</div>
+                        <small style="color: #9ca3af;">{{ pb.achieved_at|date:"M d, Y" }}</small>
+                    </div>
+                    <div class="pb-value">{{ pb.value }} <span style="font-size: 0.8rem; font-weight: 500;">kg</span>
+                    </div>
+                </div>
+                {% empty %}
+                <div style="text-align: center; padding: 2rem; color: #9ca3af;">
+                    No personal bests yet. Log a workout to start!
+                </div>
+                {% endfor %}
+            </div>
+
+            <div class="section-title" style="margin-top: 2rem;">
+                <span>🕘</span> Recent Activity
+            </div>
+            <div class="pb-list">
+                {% include 'gym/partials/workout_history_list.html' with logs=recent_logs %}
+            </div>
+        </div>
+
+        <!-- Badges & Actions -->
+        <div class="col-md-4">
+            <div class="section-title">
+                <span>🎖️</span> Latest Badges
+            </div>
+            <div class="pb-list mb-4">
+                <div class="badge-grid">
+                    {% for achievement in achievements %}
+                    <div class="badge-item">
+                        <div class="badge-icon">{{ achievement.badge_icon|default:"🏅" }}</div>
+                        <div class="badge-name">{{ achievement.name }}</div>
+                    </div>
+                    {% empty %}
+                    <div style="grid-column: 1/-1; text-align: center; color: #9ca3af; font-size: 0.9rem;">
+                        Keep working out to unlock badges!
+                    </div>
+                    {% endfor %}
+                </div>
+                <div style="text-align: center; margin-top: 1rem;">
+                    <a href="{% url 'achievements' %}"
+                        style="color: #F59E0B; text-decoration: none; font-weight: 600; font-size: 0.9rem;">View All
+                        Badges →</a>
+                </div>
+            </div>
+
+            <div class="section-title">
+                <span>⚡</span> Actions
+            </div>
+            <div class="action-grid" style="grid-template-columns: 1fr;">
+                <a href="{% url 'log_workout' %}" class="game-btn">
+                    <i>📝</i>
+                    Log Workout
+                </a>
+                <a href="{% url 'leaderboard' %}" class="game-btn">
+                    <i>📊</i>
+                    Leaderboard
+                </a>
+                <a href="{% url 'member_insights' %}" class="game-btn">
+                    <i>🧠</i>
+                    My Insights
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

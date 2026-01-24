@@ -1,0 +1,196 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Leaderboard{% endblock %}
+
+{% block extra_css %}
+<style>
+    .leaderboard-container {
+        max-width: 1000px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+    }
+
+    .leaderboard-header {
+        background: linear-gradient(135deg, #8B5CF6 0%, #6D28D9 100%);
+        color: white;
+        padding: 3rem 2rem;
+        border-radius: 20px 20px 0 0;
+        text-align: center;
+        position: relative;
+        box-shadow: 0 10px 20px rgba(109, 40, 217, 0.2);
+    }
+
+    .leaderboard-header h1 {
+        font-weight: 800;
+        margin-bottom: 0.5rem;
+        letter-spacing: -1px;
+    }
+
+    .leaderboard-body {
+        background: white;
+        border-radius: 0 0 20px 20px;
+        padding: 0;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+        overflow: hidden;
+    }
+
+    .rank-row {
+        display: flex;
+        align-items: center;
+        padding: 1.5rem 2rem;
+        border-bottom: 1px solid #f3f4f6;
+        transition: background 0.2s;
+    }
+
+    .rank-row:last-child {
+        border-bottom: none;
+    }
+
+    .rank-row:hover {
+        background: #f9fafb;
+    }
+
+    .rank-badge {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        margin-right: 1.5rem;
+        font-size: 1.1rem;
+    }
+
+    .rank-1 {
+        background: #fee2e2;
+        color: #b91c1c;
+        border: 2px solid #fecaca;
+    }
+
+    /* Red/Pink for #1? Maybe Gold */
+    /* Let's use medals */
+    .medal-icon {
+        font-size: 1.8rem;
+        margin-right: 1.5rem;
+        width: 40px;
+        text-align: center;
+    }
+
+    .rank-number {
+        color: #6b7280;
+    }
+
+    .member-avatar {
+        width: 48px;
+        height: 48px;
+        background: #e5e7eb;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        color: #374151;
+        margin-right: 1rem;
+        font-size: 1.2rem;
+    }
+
+    .member-info {
+        flex: 1;
+    }
+
+    .member-name {
+        font-weight: 700;
+        color: #1f2937;
+        font-size: 1.1rem;
+    }
+
+    .member-handle {
+        color: #9ca3af;
+        font-size: 0.9rem;
+    }
+
+    .score-badge {
+        background: #f3f4f6;
+        padding: 0.5rem 1rem;
+        border-radius: 12px;
+        text-align: right;
+    }
+
+    .score-val {
+        font-weight: 800;
+        color: #6D28D9;
+        font-size: 1.2rem;
+        display: block;
+        line-height: 1;
+    }
+
+    .score-label {
+        font-size: 0.75rem;
+        color: #6b7280;
+        text-transform: uppercase;
+        font-weight: 600;
+    }
+
+    .podium-row {
+        background: #fffbeb;
+        /* Light yellow for top 3 */
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="leaderboard-container">
+    <div class="leaderboard-header">
+        <h1>🏆 Gym Leaderboard</h1>
+        <p style="opacity: 0.9;">Top performers this month based on workout consistency</p>
+    </div>
+
+    <div class="leaderboard-body">
+        {% for leader in leaders %}
+        <div class="rank-row {% if forloop.counter <= 3 %}podium-row{% endif %}">
+            <!-- Rank -->
+            {% if forloop.counter == 1 %}
+            <div class="medal-icon">🥇</div>
+            {% elif forloop.counter == 2 %}
+            <div class="medal-icon">🥈</div>
+            {% elif forloop.counter == 3 %}
+            <div class="medal-icon">🥉</div>
+            {% else %}
+            <div class="rank-badge rank-number">{{ forloop.counter }}</div>
+            {% endif %}
+
+            <!-- Avatar -->
+            <div class="member-avatar"
+                style="background: {% if forloop.counter == 1 %}#FCD34D{% elif forloop.counter == 2 %}#E5E7EB{% elif forloop.counter == 3 %}#FCA5A5{% else %}#E5E7EB{% endif %}; color: #4B5563;">
+                {{ leader.member__user__first_name|first|default:leader.member__user__username|first|upper }}
+            </div>
+
+            <!-- Name -->
+            <div class="member-info">
+                <div class="member-name">
+                    {{ leader.member__user__first_name }} {{ leader.member__user__last_name }}
+                    {% if forloop.counter == 1 %} <span
+                        style="font-size: 0.8rem; color: #D97706; margin-left: 0.5rem;">👑 Leader</span>{% endif %}
+                </div>
+                <div class="member-handle">@{{ leader.member__user__username }}</div>
+            </div>
+
+            <!-- Score -->
+            <div class="score-badge">
+                <span class="score-val">{{ leader.total_workouts }}</span>
+                <span class="score-label">Workouts</span>
+            </div>
+        </div>
+        {% empty %}
+        <div style="padding: 4rem; text-align: center; color: #6b7280;">
+            <h3>No workouts logged yet</h3>
+            <p>Be the first to hit the gym and claim the top spot!</p>
+            <a href="{% url 'log_workout' %}"
+                style="display: inline-block; margin-top: 1rem; color: #6D28D9; font-weight: 600;">Log a Workout →</a>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

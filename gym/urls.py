@@ -3,6 +3,7 @@ from . import views
 from . import payment_views  # Import payment views
 from . import booking_views  # Import booking views
 from . import ai_views       # Import AI views
+from . import gamification_views # Import Gamification views
 
 urlpatterns = [
     path('', views.dashboard, name='dashboard'),
@@ -80,4 +81,11 @@ urlpatterns = [
     path('ai/diet/view/', ai_views.view_diet_plan, name='view_diet_plan'),
     path('ai/analytics/member/', ai_views.member_insights, name='member_insights'),
     path('ai/analytics/gym/', ai_views.gym_analytics, name='gym_analytics'),
+    
+    # ============================================
+    # PHASE 2 MODERNIZATION - GAMIFICATION ROUTES
+    # ============================================
+    path('gamification/log/', gamification_views.log_workout, name='log_workout'),
+    path('gamification/leaderboard/', gamification_views.leaderboard, name='leaderboard'),
+    path('gamification/achievements/', gamification_views.achievements_view, name='achievements'),
 ] # Phase 2 Routes Loaded
