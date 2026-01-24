@@ -278,8 +278,7 @@
                     <p>
                         <span class="instructor-badge">
                             <div class="instructor-avatar">
-                                {{ booking.class_schedule.instructor.first_name|first }}{{
-                                booking.class_schedule.instructor.last_name|first }}
+                                {{ booking.class_schedule.instructor.first_name|first }}{{ booking.class_schedule.instructor.last_name|first }}
                             </div>
                             {{ booking.class_schedule.instructor.get_full_name }}
                         </span>
@@ -302,8 +301,7 @@
                 <div class="detail-item">
                     <span class="detail-label">Time</span>
                     <span class="detail-value">
-                        {{ booking.class_schedule.start_time|time:"g:i A" }} - {{
-                        booking.class_schedule.end_time|time:"g:i A" }}
+                        {{ booking.class_schedule.start_time|time:"g:i A" }} - {{ booking.class_schedule.end_time|time:"g:i A" }}
                     </span>
                 </div>
                 <div class="detail-item">
