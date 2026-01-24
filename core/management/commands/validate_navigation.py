@@ -2,6 +2,7 @@ from django.core.management.base import BaseCommand
 from django.test import Client
 from django.contrib.auth import get_user_model
 from django.urls import reverse
+from django.utils import timezone
 from core.models import MemberProfile, Tenant
 import random
 
@@ -41,7 +42,8 @@ class Command(BaseCommand):
                 age=25,
                 registration_amount=0,
                 monthly_amount=50,
-                allotted_slot="Morning"
+                allotted_slot="Morning",
+                next_payment_date=timezone.now().date() + timezone.timedelta(days=30)
             )
 
         self.stdout.write("[OK] Users Ready")

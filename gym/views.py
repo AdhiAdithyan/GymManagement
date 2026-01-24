@@ -81,6 +81,7 @@ def member_dashboard(request):
     return render(request, 'gym/member_dashboard.html', context)
 
 @login_required
+@role_required(['member'])
 def member_attendance_history(request):
     member = request.user.member_profile
     date_from = request.GET.get('date_from', '')
@@ -106,6 +107,7 @@ def member_attendance_history(request):
     return render(request, 'gym/member_attendance.html', context)
 
 @login_required
+@role_required(['member'])
 def member_payment_history(request):
     member = request.user.member_profile
     date_from = request.GET.get('date_from', '')
@@ -130,6 +132,7 @@ def member_payment_history(request):
     return render(request, 'gym/member_payments.html', context)
 
 @login_required
+@role_required(['member'])
 def member_video_list(request):
     search_query = request.GET.get('search', '')
     videos = WorkoutVideo.objects.all().order_by('-uploaded_at')
@@ -151,12 +154,14 @@ def member_video_list(request):
     return render(request, 'gym/member_videos.html', context)
 
 @login_required
+@role_required(['member'])
 def member_diet_view(request):
     member = request.user.member_profile
     diet_plan = DietPlan.objects.filter(member=member).last()
     return render(request, 'gym/member_diet.html', {'diet_plan': diet_plan})
 
 @login_required
+@role_required(['member'])
 def leave_request_create(request):
     member = request.user.member_profile
     if request.method == 'POST':

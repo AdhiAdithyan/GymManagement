@@ -24,7 +24,7 @@
                 <select name="membership" class="form-select">
                     <option value="">All Memberships</option>
                     {% for value, label in membership_choices %}
-                    <option value="{{ value }}" {% if membership_filter==value %}selected{% endif %}>{{ label }}
+                    <option value="{{ value }}" {% if membership_filter == value %}selected{% endif %}>{{ label }}
                     </option>
                     {% endfor %}
                 </select>
@@ -32,8 +32,8 @@
             <div class="col-md-3">
                 <select name="payment_status" class="form-select">
                     <option value="">All Payment Status</option>
-                    <option value="due" {% if payment_status=='due' %}selected{% endif %}>Payment Due</option>
-                    <option value="upcoming" {% if payment_status=='upcoming' %}selected{% endif %}>Due Soon (7 days)
+                    <option value="due" {% if payment_status == 'due' %}selected{% endif %}>Payment Due</option>
+                    <option value="upcoming" {% if payment_status == 'upcoming' %}selected{% endif %}>Due Soon (7 days)
                     </option>
                 </select>
             </div>
