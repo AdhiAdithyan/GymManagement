@@ -18,8 +18,9 @@
                     {% endif %}
                 </div>
             </form>
-            <button class="btn btn-info btn-rounded text-white"><i class="fas fa-plus me-2"></i> Add New
-                Trainer</button>
+            <a href="{% url 'add_trainer' %}" class="btn btn-info btn-rounded text-white">
+                <i class="fas fa-plus me-2"></i> Add New Trainer
+            </a>
         </div>
     </div>
     <div class="card-body p-0">
@@ -56,12 +57,15 @@
                         </td>
                         <td>{{ trainer.date_joined|date:"M d, Y" }}</td>
                         <td>
-                            <button type="button" class="btn btn-link btn-sm btn-rounded text-secondary">
+                            <a href="{% url 'edit_trainer' trainer.id %}"
+                                class="btn btn-link btn-sm btn-rounded text-secondary">
                                 <i class="fas fa-edit"></i>
-                            </button>
-                            <button type="button" class="btn btn-link btn-sm btn-rounded text-danger">
+                            </a>
+                            <a href="{% url 'delete_trainer' trainer.id %}"
+                                class="btn btn-link btn-sm btn-rounded text-danger"
+                                onclick="return confirm('Are you sure you want to delete this trainer?')">
                                 <i class="fas fa-trash"></i>
-                            </button>
+                            </a>
                         </td>
                     </tr>
                     {% empty %}

@@ -19,32 +19,31 @@ class Command(BaseCommand):
         tenant, _ = Tenant.objects.get_or_create(name="Test Gym", defaults={'subdomain': 'testgym'})
         
         # Admin
-        admin_user, _ = User.objects.get_or_create(username='test_admin', defaults={'email': 'admin@test.com', 'role': 'tenant_admin'})
-        admin_user.set_password('password123')
-        admin_user.save()
+        if User.objects.filter(username='test_admin').exists():
+            User.objects.filter(username='test_admin').delete()
+        admin_user = User.objects.create_user(username='test_admin', email='admin@test.com', password='password123', role='tenant_admin')
         
         # Trainer
-        trainer_user, _ = User.objects.get_or_create(username='test_trainer', defaults={'email': 'trainer@test.com', 'role': 'trainer'})
-        trainer_user.set_password('password123')
-        trainer_user.save()
+        if User.objects.filter(username='test_trainer').exists():
+            User.objects.filter(username='test_trainer').delete()
+        trainer_user = User.objects.create_user(username='test_trainer', email='trainer@test.com', password='password123', role='trainer')
         
         # Member
-        member_user, _ = User.objects.get_or_create(username='test_member', defaults={'email': 'member@test.com', 'role': 'member'})
-        member_user.set_password('password123')
-        member_user.save()
+        if User.objects.filter(username='test_member').exists():
+            User.objects.filter(username='test_member').delete()
+        member_user = User.objects.create_user(username='test_member', email='member@test.com', password='password123', role='member')
         
         # Ensure profile for member (some views require it)
-        if not hasattr(member_user, 'member_profile'):
-            MemberProfile.objects.create(
-                user=member_user,
-                tenant=tenant,
-                membership_type='monthly',
-                age=25,
-                registration_amount=0,
-                monthly_amount=50,
-                allotted_slot="Morning",
-                next_payment_date=timezone.now().date() + timezone.timedelta(days=30)
-            )
+        MemberProfile.objects.create(
+            user=member_user,
+            tenant=tenant,
+            membership_type='monthly',
+            age=25,
+            registration_amount=0,
+            monthly_amount=50,
+            allotted_slot="Morning",
+            next_payment_date=timezone.now().date() + timezone.timedelta(days=30)
+        )
 
         self.stdout.write("[OK] Users Ready")
 

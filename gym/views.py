@@ -3,7 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.utils import timezone
 from core.models import CustomUser, MemberProfile, Attendance, Payment, Expense, ChatMessage, DietPlan, WorkoutVideo, LeaveRequest
-from .forms import VideoForm, DietPlanForm, LeaveRequestForm, MemberAddForm, MemberEditForm
+from .forms import VideoForm, DietPlanForm, LeaveRequestForm, MemberAddForm, MemberEditForm, TrainerAddForm, TrainerEditForm
 from django.db.models import Sum, Q, Count
 from django.core.paginator import Paginator
 from core.decorators import role_required
@@ -244,6 +244,8 @@ def add_member(request):
                         username=form.cleaned_data['username'],
                         email=form.cleaned_data['email'],
                         password=form.cleaned_data['password'],
+                        first_name=form.cleaned_data['first_name'],
+                        last_name=form.cleaned_data['last_name'],
                         role='member'
                     )
                 
@@ -286,11 +288,20 @@ def edit_member(request, member_id):
     if request.method == 'POST':
         form = MemberEditForm(request.POST, request.FILES, instance=member)
         if form.is_valid():
+            # Update User fields
+            user = member.user
+            user.first_name = form.cleaned_data['first_name']
+            user.last_name = form.cleaned_data['last_name']
+            user.save()
+            
             form.save()
             messages.success(request, 'Member updated successfully!')
             return redirect('member_list')
     else:
-        form = MemberEditForm(instance=member)
+        form = MemberEditForm(instance=member, initial={
+            'first_name': member.user.first_name,
+            'last_name': member.user.last_name,
+        })
     return render(request, 'gym/member_form.html', {'form': form, 'title': 'Edit Member', 'is_edit': True})
 
 @login_required
@@ -689,6 +700,56 @@ def trainer_list(request):
         'search_query': search_query,
     }
     return render(request, 'gym/trainer_list.html', context)
+
+@login_required
+@role_required(['admin', 'tenant_admin', 'super_admin'])
+def add_trainer(request):
+    if request.method == 'POST':
+        form = TrainerAddForm(request.POST)
+        if form.is_valid():
+            if CustomUser.objects.filter(username=form.cleaned_data['username']).exists():
+                form.add_error('username', 'Username already exists.')
+            elif CustomUser.objects.filter(email=form.cleaned_data['email']).exists():
+                form.add_error('email', 'Email already exists.')
+            else:
+                try:
+                    user = CustomUser.objects.create_user(
+                        username=form.cleaned_data['username'],
+                        email=form.cleaned_data['email'],
+                        password=form.cleaned_data['password'],
+                        first_name=form.cleaned_data.get('first_name', ''),
+                        last_name=form.cleaned_data.get('last_name', ''),
+                        role='trainer'
+                    )
+                    messages.success(request, 'Trainer added successfully!')
+                    return redirect('trainer_list')
+                except Exception as e:
+                    messages.error(request, f'Error creating trainer: {str(e)}')
+    else:
+        form = TrainerAddForm()
+    return render(request, 'gym/trainer_form.html', {'form': form, 'title': 'Add New Trainer'})
+
+@login_required
+@role_required(['admin', 'tenant_admin', 'super_admin'])
+def edit_trainer(request, trainer_id):
+    trainer = get_object_or_404(CustomUser, id=trainer_id, role='trainer')
+    if request.method == 'POST':
+        form = TrainerEditForm(request.POST, instance=trainer)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Trainer updated successfully!')
+            return redirect('trainer_list')
+    else:
+        form = TrainerEditForm(instance=trainer)
+    return render(request, 'gym/trainer_form.html', {'form': form, 'title': 'Edit Trainer', 'is_edit': True})
+
+@login_required
+@role_required(['admin', 'tenant_admin', 'super_admin'])
+def delete_trainer(request, trainer_id):
+    trainer = get_object_or_404(CustomUser, id=trainer_id, role='trainer')
+    trainer.delete()
+    messages.success(request, 'Trainer deleted successfully!')
+    return redirect('trainer_list')
 
 @login_required
 @role_required(['admin', 'tenant_admin', 'super_admin', 'trainer'])

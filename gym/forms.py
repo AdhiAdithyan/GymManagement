@@ -35,6 +35,8 @@ class LeaveRequestForm(forms.ModelForm):
 class MemberAddForm(forms.ModelForm):
     username = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control'}))
     email = forms.EmailField(widget=forms.EmailInput(attrs={'class': 'form-control'}))
+    first_name = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control'}))
+    last_name = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control'}))
     password = forms.CharField(
         widget=forms.PasswordInput(attrs={'class': 'form-control'}),
         help_text='Minimum 8 characters'
@@ -47,7 +49,7 @@ class MemberAddForm(forms.ModelForm):
     class Meta:
         model = MemberProfile
         fields = ['membership_type', 'age', 'occupation', 'image', 'phone_number',
-                 'registration_date', 'registration_amount', 'monthly_amount', 'allotted_slot']
+                 'registration_date', 'registration_amount', 'monthly_amount', 'allotted_slot', 'address']
         widgets = {
             'membership_type': forms.Select(attrs={'class': 'form-select'}),
             'age': forms.NumberInput(attrs={'class': 'form-control'}),
@@ -61,6 +63,7 @@ class MemberAddForm(forms.ModelForm):
             'registration_amount': forms.NumberInput(attrs={'class': 'form-control'}),
             'monthly_amount': forms.NumberInput(attrs={'class': 'form-control'}),
             'allotted_slot': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. 6:00 AM - 7:00 AM'}),
+            'address': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
         }
     
     def clean(self):
@@ -79,10 +82,13 @@ class MemberAddForm(forms.ModelForm):
 
 
 class MemberEditForm(forms.ModelForm):
+    first_name = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control'}))
+    last_name = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control'}))
+
     class Meta:
         model = MemberProfile
         fields = ['membership_type', 'age', 'occupation', 'image', 'phone_number',
-                 'next_payment_date', 'monthly_amount', 'allotted_slot']
+                 'next_payment_date', 'monthly_amount', 'allotted_slot', 'address']
         widgets = {
             'membership_type': forms.Select(attrs={'class': 'form-select'}),
             'age': forms.NumberInput(attrs={'class': 'form-control'}),
@@ -95,6 +101,7 @@ class MemberEditForm(forms.ModelForm):
             'next_payment_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
             'monthly_amount': forms.NumberInput(attrs={'class': 'form-control'}),
             'allotted_slot': forms.TextInput(attrs={'class': 'form-control'}),
+            'address': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
         }
 
 class WhatsAppMessageForm(forms.Form):
@@ -159,4 +166,46 @@ class BrandingForm(forms.ModelForm):
             'secondary_color': forms.TextInput(attrs={'class': 'form-control', 'type': 'color'}),
             'accent_color': forms.TextInput(attrs={'class': 'form-control', 'type': 'color'}),
             'logo': forms.FileInput(attrs={'class': 'form-control'}),
+        }
+
+class TrainerAddForm(forms.ModelForm):
+    username = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control'}))
+    email = forms.EmailField(widget=forms.EmailInput(attrs={'class': 'form-control'}))
+    first_name = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control'}))
+    last_name = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control'}))
+    password = forms.CharField(
+        widget=forms.PasswordInput(attrs={'class': 'form-control'}),
+        help_text='Minimum 8 characters'
+    )
+    confirm_password = forms.CharField(
+        widget=forms.PasswordInput(attrs={'class': 'form-control'}),
+        label='Confirm Password'
+    )
+    
+    class Meta:
+        model = CustomUser
+        fields = ['username', 'email', 'first_name', 'last_name', 'password']
+    
+    def clean(self):
+        cleaned_data = super().clean()
+        password = cleaned_data.get('password')
+        confirm_password = cleaned_data.get('confirm_password')
+        
+        if password and confirm_password:
+            if password != confirm_password:
+                raise forms.ValidationError("Passwords do not match!")
+            
+            if len(password) < 8:
+                raise forms.ValidationError("Password must be at least 8 characters long!")
+        
+        return cleaned_data
+
+class TrainerEditForm(forms.ModelForm):
+    class Meta:
+        model = CustomUser
+        fields = ['email', 'first_name', 'last_name']
+        widgets = {
+            'email': forms.EmailInput(attrs={'class': 'form-control'}),
+            'first_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'last_name': forms.TextInput(attrs={'class': 'form-control'}),
         }

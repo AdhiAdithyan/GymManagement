@@ -58,7 +58,41 @@
                     <hr class="my-4">
                     {% endif %}
 
-                    <h6 class="text-uppercase text-muted fw-bold small mb-3">Member Details</h6>
+                    <h6 class="text-uppercase text-muted fw-bold small mb-3">Member Name & Contact</h6>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">First Name</label>
+                            {{ form.first_name }}
+                            {% if form.first_name.errors %}
+                            <div class="text-danger small mt-1">{{ form.first_name.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Last Name</label>
+                            {{ form.last_name }}
+                            {% if form.last_name.errors %}
+                            <div class="text-danger small mt-1">{{ form.last_name.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Phone Number</label>
+                        {{ form.phone_number }}
+                        {% if form.phone_number.errors %}
+                        <div class="text-danger small mt-1">{{ form.phone_number.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Address</label>
+                        {{ form.address }}
+                        {% if form.address.errors %}
+                        <div class="text-danger small mt-1">{{ form.address.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <h6 class="text-uppercase text-muted fw-bold small mb-3 mt-4">Personal Details</h6>
                     <div class="row mb-3">
                         <div class="col-md-6">
                             <label class="form-label fw-bold">Age</label>

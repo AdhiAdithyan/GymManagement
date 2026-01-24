@@ -100,6 +100,7 @@ class MemberProfile(models.Model):
     registration_amount = models.DecimalField(max_digits=10, decimal_places=2)
     monthly_amount = models.DecimalField(max_digits=10, decimal_places=2)
     allotted_slot = models.CharField(max_length=50, help_text="e.g. 6:00 AM - 7:00 AM")
+    address = models.TextField(blank=True, null=True)
 
     def __str__(self):
         return f"{self.user.username} Profile"

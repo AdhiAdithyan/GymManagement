@@ -23,6 +23,9 @@ urlpatterns = [
     path('trainer/video/upload/', views.upload_video, name='upload_video'),
     path('trainer/diet/create/', views.create_diet_plan, name='create_diet_plan'),
     path('manage/trainers/', views.trainer_list, name='trainer_list'),
+    path('trainers/add/', views.add_trainer, name='add_trainer'),
+    path('trainers/edit/<int:trainer_id>/', views.edit_trainer, name='edit_trainer'),
+    path('trainers/delete/<int:trainer_id>/', views.delete_trainer, name='delete_trainer'),
     
     path('leave/list/', views.leave_request_list, name='leave_request_list'),
     path('leave/action/<int:leave_id>/', views.leave_request_action, name='leave_request_action'),
