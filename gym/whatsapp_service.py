@@ -1,11 +1,12 @@
 """
 WhatsApp Service Module
 Handles sending WhatsApp messages to gym members using Twilio API
+Supports Multi-tenancy with per-gym Twilio credentials
 """
 
 from twilio.rest import Client
 from django.conf import settings
-from core.models import MemberProfile, WhatsAppMessage
+from core.models import MemberProfile, WhatsAppMessage, BrandingConfig
 import logging
 
 logger = logging.getLogger(__name__)
@@ -15,20 +16,48 @@ class WhatsAppService:
     """Service class for WhatsApp messaging operations"""
     
     def __init__(self):
-        """Initialize Twilio client with credentials from settings"""
-        self.account_sid = getattr(settings, 'TWILIO_ACCOUNT_SID', None)
-        self.auth_token = getattr(settings, 'TWILIO_AUTH_TOKEN', None)
-        self.whatsapp_number = getattr(settings, 'TWILIO_WHATSAPP_NUMBER', None)
+        """Initialize Twilio client with defaults from settings"""
+        # Default global credentials from settings
+        self.default_account_sid = getattr(settings, 'TWILIO_ACCOUNT_SID', None)
+        self.default_auth_token = getattr(settings, 'TWILIO_AUTH_TOKEN', None)
+        self.default_whatsapp_number = getattr(settings, 'TWILIO_WHATSAPP_NUMBER', None)
         
-        if self.account_sid and self.auth_token:
-            self.client = Client(self.account_sid, self.auth_token)
-        else:
-            self.client = None
-            logger.warning("Twilio credentials not configured. WhatsApp service disabled.")
+        # We don't initialize a static client here anymore, 
+        # as it can vary per request/tenant.
     
-    def is_configured(self):
-        """Check if WhatsApp service is properly configured"""
-        return self.client is not None
+    def get_client(self, tenant=None):
+        """
+        Get an initialized Twilio Client and sender number.
+        Tries tenant-specific credentials first, then falls back to settings.
+        """
+        account_sid = self.default_account_sid
+        auth_token = self.default_auth_token
+        whatsapp_number = self.default_whatsapp_number
+        
+        # Check for tenant-specific credentials
+        if tenant:
+            try:
+                branding = BrandingConfig.objects.filter(tenant=tenant).first()
+                if branding and branding.twilio_account_sid and branding.twilio_auth_token:
+                    account_sid = branding.twilio_account_sid
+                    auth_token = branding.twilio_auth_token
+                    whatsapp_number = branding.twilio_whatsapp_number or whatsapp_number
+                    logger.info(f"Using tenant-specific Twilio credentials for: {tenant.name}")
+            except Exception as e:
+                logger.error(f"Error fetching tenant credentials: {str(e)}")
+
+        if account_sid and auth_token:
+            try:
+                return Client(account_sid, auth_token), whatsapp_number
+            except Exception as e:
+                logger.error(f"Failed to initialize Twilio Client: {str(e)}")
+        
+        return None, whatsapp_number
+    
+    def is_configured(self, tenant=None):
+        """Check if WhatsApp service is properly configured (tenant or global)"""
+        client, num = self.get_client(tenant)
+        return client is not None
     
     def format_phone_number(self, phone):
         """
@@ -52,22 +81,17 @@ class WhatsAppService:
         
         return phone
     
-    def send_message(self, phone_number, message_content):
+    def send_message(self, phone_number, message_content, tenant=None):
         """
         Send WhatsApp message to a single recipient
-        
-        Args:
-            phone_number: Phone number in format +1234567890
-            message_content: Message text to send
-            
-        Returns:
-            dict: {'success': bool, 'message_sid': str or None, 'error': str or None}
         """
-        if not self.is_configured():
+        client, whatsapp_number = self.get_client(tenant)
+        
+        if not client:
             return {
                 'success': False,
                 'message_sid': None,
-                'error': 'WhatsApp service not configured'
+                'error': 'WhatsApp service not configured for this gym'
             }
         
         try:
@@ -79,9 +103,9 @@ class WhatsAppService:
                     'error': 'Invalid phone number'
                 }
             
-            message = self.client.messages.create(
+            message = client.messages.create(
                 body=message_content,
-                from_=self.whatsapp_number,
+                from_=whatsapp_number,
                 to=formatted_number
             )
             
@@ -100,22 +124,8 @@ class WhatsAppService:
                 'error': str(e)
             }
     
-    def send_bulk_messages(self, phone_numbers, message_content):
-        """
-        Send WhatsApp message to multiple recipients
-        
-        Args:
-            phone_numbers: List of phone numbers
-            message_content: Message text to send
-            
-        Returns:
-            dict: {
-                'total': int,
-                'successful': int,
-                'failed': int,
-                'results': list of dicts
-            }
-        """
+    def send_bulk_messages(self, phone_numbers, message_content, tenant=None):
+        """Send WhatsApp message to multiple recipients"""
         results = {
             'total': len(phone_numbers),
             'successful': 0,
@@ -124,7 +134,7 @@ class WhatsAppService:
         }
         
         for phone in phone_numbers:
-            result = self.send_message(phone, message_content)
+            result = self.send_message(phone, message_content, tenant=tenant)
             if result['success']:
                 results['successful'] += 1
             else:
@@ -137,40 +147,30 @@ class WhatsAppService:
         
         return results
     
-    def get_members_by_slot(self, time_slot):
+    def get_members_by_slot(self, time_slot, tenant=None):
         """
-        Get all members in a specific time slot
-        
-        Args:
-            time_slot: Time slot string (e.g., "6:00 AM - 7:00 AM") or "all"
-            
-        Returns:
-            QuerySet of MemberProfile objects
+        Get all members in a specific time slot for a specific tenant
         """
         if time_slot == 'all':
-            return MemberProfile.objects.all().select_related('user')
+            return MemberProfile.objects.filter(tenant=tenant).select_related('user')
         else:
             return MemberProfile.objects.filter(
+                tenant=tenant,
                 allotted_slot=time_slot
             ).select_related('user')
-    
+
     def send_to_time_slot(self, time_slot, message_content, sent_by_user):
-        """
-        Send WhatsApp message to all members in a specific time slot
+        """Send WhatsApp message to all members in a specific time slot"""
+        tenant = getattr(sent_by_user, 'tenant', None)
         
-        Args:
-            time_slot: Time slot string or "all"
-            message_content: Message text to send
-            sent_by_user: CustomUser who is sending the message
-            
-        Returns:
-            WhatsAppMessage object with results
-        """
-        # Get members in the time slot
-        members = self.get_members_by_slot(time_slot)
+        # Get members in the time slot + tenant isolation
+        if time_slot == 'all':
+            members = MemberProfile.objects.filter(tenant=tenant).select_related('user')
+        else:
+            members = MemberProfile.objects.filter(tenant=tenant, allotted_slot=time_slot).select_related('user')
         
-        # Create WhatsApp message log
         whatsapp_log = WhatsAppMessage.objects.create(
+            tenant=tenant,
             sent_by=sent_by_user,
             time_slot=time_slot,
             message_content=message_content,
@@ -178,26 +178,17 @@ class WhatsAppService:
             recipient_count=members.count()
         )
         
-        # Collect phone numbers (assuming phone is stored in user model or member profile)
-        # Note: You may need to add a phone_number field to MemberProfile or CustomUser
         phone_numbers = []
         member_ids = []
         
         for member in members:
-            # Try to get phone from user's email or add a phone field
-            # For now, we'll use a placeholder - you need to add phone_number field
-            if hasattr(member.user, 'phone_number') and member.user.phone_number:
-                phone_numbers.append(member.user.phone_number)
-                member_ids.append(member.id)
-            elif hasattr(member, 'phone_number') and member.phone_number:
+            if member.phone_number:
                 phone_numbers.append(member.phone_number)
                 member_ids.append(member.id)
         
-        # Send messages
         if phone_numbers:
-            results = self.send_bulk_messages(phone_numbers, message_content)
+            results = self.send_bulk_messages(phone_numbers, message_content, tenant=tenant)
             
-            # Update log
             whatsapp_log.recipients = member_ids
             whatsapp_log.recipient_count = len(member_ids)
             
@@ -217,13 +208,6 @@ class WhatsAppService:
             whatsapp_log.save()
         
         return whatsapp_log
-    
-    def get_unique_time_slots(self):
-        """Get list of unique time slots from all members"""
-        slots = MemberProfile.objects.values_list(
-            'allotted_slot', flat=True
-        ).distinct().order_by('allotted_slot')
-        return list(slots)
 
 
 # Singleton instance

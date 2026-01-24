@@ -202,7 +202,11 @@ class BulkMemberImportForm(forms.Form):
 class BrandingForm(forms.ModelForm):
     class Meta:
         model = BrandingConfig
-        fields = ['app_name', 'primary_color', 'secondary_color', 'accent_color', 'logo', 'enable_auto_whatsapp_reminders', 'whatsapp_reminder_days_before']
+        fields = [
+            'app_name', 'primary_color', 'secondary_color', 'accent_color', 'logo', 
+            'enable_auto_whatsapp_reminders', 'whatsapp_reminder_days_before',
+            'twilio_account_sid', 'twilio_auth_token', 'twilio_whatsapp_number'
+        ]
         widgets = {
             'app_name': forms.TextInput(attrs={'class': 'form-control'}),
             'primary_color': forms.TextInput(attrs={'class': 'form-control', 'type': 'color'}),
@@ -211,6 +215,9 @@ class BrandingForm(forms.ModelForm):
             'logo': forms.FileInput(attrs={'class': 'form-control'}),
             'enable_auto_whatsapp_reminders': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
             'whatsapp_reminder_days_before': forms.NumberInput(attrs={'class': 'form-control', 'min': 1, 'max': 30}),
+            'twilio_account_sid': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'}),
+            'twilio_auth_token': forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Enter your Twilio Auth Token'}, render_value=True),
+            'twilio_whatsapp_number': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'whatsapp:+14155238886'}),
         }
 
 class TrainerAddForm(forms.ModelForm):

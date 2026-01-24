@@ -42,6 +42,11 @@ class BrandingConfig(models.Model):
     secondary_color = models.CharField(max_length=7, default='#03DAC6')
     accent_color = models.CharField(max_length=7, default='#FF5722')
     
+    # WhatsApp / Twilio Integration (Per-tenant credentials)
+    twilio_account_sid = models.CharField(max_length=100, blank=True, null=True, help_text="Twilio Account SID")
+    twilio_auth_token = models.CharField(max_length=100, blank=True, null=True, help_text="Twilio Auth Token")
+    twilio_whatsapp_number = models.CharField(max_length=50, blank=True, null=True, help_text="Twilio WhatsApp Number (e.g., whatsapp:+14155238886)")
+    
     # Feature toggles
     features = models.JSONField(default=dict, help_text="Feature flags as JSON")
     enable_auto_whatsapp_reminders = models.BooleanField(default=False, help_text="Automatically send WhatsApp payment reminders")

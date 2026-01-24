@@ -937,9 +937,10 @@ def send_whatsapp_message(request):
     from .whatsapp_service import whatsapp_service
     from core.models import WhatsAppMessage
     
-    # Check if WhatsApp is configured
-    if not whatsapp_service.is_configured():
-        messages.warning(request, 'WhatsApp service is not configured. Please contact administrator.')
+    # Check if WhatsApp is configured for this tenant
+    tenant = getattr(request, 'tenant', None) or request.user.tenant
+    if not whatsapp_service.is_configured(tenant=tenant):
+        messages.warning(request, 'WhatsApp service is not configured for your gym. Please set up your Twilio credentials in Portal Settings.')
     
     if request.method == 'POST':
         form = WhatsAppMessageForm(request.POST)
@@ -948,7 +949,7 @@ def send_whatsapp_message(request):
             message_content = form.cleaned_data['message']
             
             # Get preview of recipients
-            members = whatsapp_service.get_members_by_slot(time_slot)
+            members = whatsapp_service.get_members_by_slot(time_slot, tenant=tenant)
             recipient_count = members.count()
             
             if recipient_count == 0:
@@ -989,7 +990,7 @@ def send_whatsapp_message(request):
     # Get preview of members for selected slot (for AJAX or initial load)
     context = {
         'form': form,
-        'whatsapp_configured': whatsapp_service.is_configured(),
+        'whatsapp_configured': whatsapp_service.is_configured(tenant=tenant),
     }
     return render(request, 'gym/send_whatsapp.html', context)
 
@@ -1036,8 +1037,9 @@ def send_payment_reminder(request, member_id):
         messages.error(request, f"Member {member.user.username} does not have a phone number.")
         return redirect('member_list')
         
-    if not whatsapp_service.is_configured():
-        messages.error(request, "WhatsApp service is not configured. Please contact administrator.")
+    tenant = member.tenant
+    if not whatsapp_service.is_configured(tenant=tenant):
+        messages.error(request, "WhatsApp service is not configured for this gym. Please set up your Twilio credentials in Portal Settings.")
         return redirect('member_list')
         
     gym_name = member.tenant.name if member.tenant else "Your Gym"
@@ -1049,7 +1051,7 @@ def send_payment_reminder(request, member_id):
     message_content = f"Hello {first_name}, this is a friendly reminder from {gym_name}. Your gym subscription payment of {amount} is due on {due_date}. Please clear it as soon as possible to continue your workouts. Thank you!"
     
     # Send message
-    result = whatsapp_service.send_message(member.phone_number, message_content)
+    result = whatsapp_service.send_message(member.phone_number, message_content, tenant=tenant)
     
     # Log the message in WhatsApp history
     WhatsAppMessage.objects.create(

@@ -73,6 +73,31 @@
                             automatic WhatsApp message.</div>
                     </div>
 
+                    <hr class="my-4">
+                    <h6 class="text-uppercase text-muted fw-bold small mb-3"><i
+                            class="fab fa-whatsapp me-2"></i>WhatsApp API Connection (Twilio)</h6>
+                    <p class="small text-muted mb-4">Set up your individual Twilio credentials to use your own WhatsApp
+                        number for this gym.</p>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Twilio Account SID</label>
+                        {{ form.twilio_account_sid }}
+                        <div class="form-text">Your Account SID from the Twilio Console.</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Twilio Auth Token</label>
+                        {{ form.twilio_auth_token }}
+                        <div class="form-text">Your secret authentication token.</div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Twilio WhatsApp Number</label>
+                        {{ form.twilio_whatsapp_number }}
+                        <div class="form-text">Ensure it has the <code>whatsapp:</code> prefix (e.g.,
+                            <code>whatsapp:+14155238886</code>).</div>
+                    </div>
+
                     <div class="d-grid gap-2 mt-4">
                         <button type="submit" class="btn btn-primary btn-lg">Save Changes</button>
                         <a href="{% url 'dashboard' %}" class="btn btn-light">Back to Dashboard</a>

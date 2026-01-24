@@ -90,8 +90,8 @@ class Command(BaseCommand):
                     message_content = f"Hello {first_name}, this is an automatic reminder from {gym_name}. Your gym payment of {amount} is {days_overdue} days overdue. Please clear it today to continue your membership. Thank you!"
                 
                 # Send message
-                if whatsapp_service.is_configured():
-                    result = whatsapp_service.send_message(member.phone_number, message_content)
+                if whatsapp_service.is_configured(tenant=tenant):
+                    result = whatsapp_service.send_message(member.phone_number, message_content, tenant=tenant)
                     
                     WhatsAppMessage.objects.create(
                         tenant=tenant,
