@@ -205,11 +205,11 @@
         <div class="container-fluid">
             <a class="navbar-brand fw-bold" href="{% url 'dashboard' %}">
                 {% if request.tenant.branding.logo %}
-                <img src="{{ request.tenant.branding.logo.url }}" height="40" alt="Logo" class="rounded-circle me-2"
-                    style="border: 2px solid white; object-fit: cover;">
+                <img src="{{ request.tenant.branding.logo.url }}" alt="Logo" class="rounded-circle me-2"
+                    style="border: 2px solid white; object-fit: cover; width: 40px; height: 40px;">
                 {% else %}
-                <img src="/static/era_logo_mark.jpg" height="40" alt="ERA Logo" class="rounded-circle me-2"
-                    style="border: 2px solid white;">
+                <img src="/static/era_logo_mark.jpg" alt="ERA Logo" class="rounded-circle me-2"
+                    style="border: 2px solid white; width: 40px; height: 40px; object-fit: cover;">
                 {% endif %}
                 {{ request.tenant.branding.app_name|default:"ERA Fitness Studio" }}
             </a>
@@ -243,14 +243,15 @@
                         <form action="{% url 'logout' %}" method="post" class="d-inline">
                             {% csrf_token %}
                             <button type="submit" class="nav-link btn btn-link text-white text-decoration-none"
-                                style="box-shadow: none;">
+                                style="box-shadow: none; border: none; padding: 0.5rem 1rem;">
                                 <i class="fas fa-sign-out-alt me-1"></i> Logout
                             </button>
                         </form>
                     </li>
                     {% else %}
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'login' %}">Login</a>
+                        <a class="nav-link border border-white rounded px-3 py-1 mt-1"
+                            href="{% url 'login' %}">Login</a>
                     </li>
                     {% endif %}
                 </ul>
