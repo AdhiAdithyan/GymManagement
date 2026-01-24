@@ -1281,7 +1281,13 @@ def branding_settings(request):
     from .forms import BrandingForm
     from core.models import BrandingConfig
     
-    tenant = request.user.tenant
+    # Try to get tenant from request (set by middleware) or user
+    tenant = getattr(request, 'tenant', None) or request.user.tenant
+    
+    if not tenant:
+        messages.error(request, 'No active gym tenant found for your account. Please contact support.')
+        return redirect('dashboard')
+        
     branding, created = BrandingConfig.objects.get_or_create(tenant=tenant)
     
     if request.method == 'POST':
