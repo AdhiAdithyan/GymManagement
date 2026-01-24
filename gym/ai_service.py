@@ -12,22 +12,25 @@ class GeminiAIService:
     """Google Gemini AI integration for workout and diet plans"""
     
     def __init__(self):
-        genai.configure(api_key=settings.GEMINI_API_KEY)
-        self.model = genai.GenerativeModel('gemini-pro')
+        try:
+            genai.configure(api_key=settings.GEMINI_API_KEY)
+            self.model = genai.GenerativeModel('gemini-pro')
+            self.is_configured = True
+        except Exception:
+            self.is_configured = False
+            self.model = None
     
     def generate_workout_plan(self, member_profile, goals, duration_weeks=4, days_per_week=3):
         """
-        Generate personalized workout plan
-        
-        Args:
-            member_profile: MemberProfile object
-            goals: str - fitness goals (e.g., "weight loss", "muscle gain", "endurance")
-            duration_weeks: int - plan duration in weeks
-            days_per_week: int - workout days per week
-        
-        Returns:
-            dict with workout plan
+        Generate personalized workout plan - uses fallback if not configured
         """
+        if not self.is_configured:
+            return {
+                'success': False,
+                'error': "AI Service not configured (using fallback)",
+                'fallback_plan': self._get_fallback_workout_plan(goals, duration_weeks, days_per_week)
+            }
+            
         prompt = f"""
         Create a detailed {duration_weeks}-week workout plan for a gym member with the following profile:
         

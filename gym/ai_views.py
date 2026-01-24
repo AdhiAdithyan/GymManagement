@@ -9,12 +9,51 @@ import json
 import markdown
 
 @login_required
+def connect_ai_tools(request):
+    """
+    View to let users 'connect' their AI tools by providing email/phone.
+    This simulates an authentication flow requested by the user.
+    """
+    if request.method == 'POST':
+        email = request.POST.get('email')
+        phone = request.POST.get('phone')
+        
+        # Save this 'connection' - for now we'll mark it in session
+        # In a real app, we might store this in a dedicated model or the MemberProfile
+        request.session['ai_connected'] = True
+        request.session['ai_email'] = email
+        request.session['ai_phone'] = phone
+        
+        # Also update the profile if it exists
+        try:
+            profile = request.user.member_profile
+            if phone and not profile.phone_number:
+                profile.phone_number = phone
+                profile.save()
+        except:
+            pass
+            
+        messages.success(request, "AI Assistant successfully connected!")
+        
+        # Redirect back to where they came from or default
+        next_url = request.GET.get('next', 'dashboard')
+        return redirect(next_url)
+        
+    return render(request, 'gym/connect_ai_tools.html')
+
+from django.urls import reverse
+
+@login_required
 def ai_workout_plan(request):
     """
     View to handle AI workout plan generation.
-    GET: Display the form to input fitness goals.
-    POST: Generate the plan using Gemini AI.
+    Checks if user is 'connected' first.
     """
+    # Check connection status
+    if not request.session.get('ai_connected'):
+        # Pass name of view to reverse
+        return redirect(f"{reverse('connect_ai_tools')}?next=ai_workout_plan")
+
     if request.method == 'POST':
         goal = request.POST.get('goal')
         fitness_level = request.POST.get('fitness_level')
@@ -33,10 +72,7 @@ def ai_workout_plan(request):
                 days_per_week=days_per_week
             )
             
-            # Store in session to display on next page (or save to DB)
-            # For now, we'll store in session for immediate viewing
             request.session['generated_workout_plan'] = plan_data
-            
             messages.success(request, "Your AI-powered workout plan has been generated!")
             return redirect('view_workout_plan')
             
@@ -44,8 +80,9 @@ def ai_workout_plan(request):
             messages.error(request, f"Failed to generate plan: {str(e)}")
             return redirect('ai_workout_plan')
 
+    # We removed 'api_key_configured' check to rely on the 'connect' flow and fallback
     return render(request, 'gym/ai_workout_plan.html', {
-        'api_key_configured': bool(settings.GEMINI_API_KEY)
+        'api_key_configured': True # Always allow if they passed the connect screen
     })
 
 @login_required
@@ -66,7 +103,6 @@ def view_workout_plan(request):
         # If failed, use fallback plan if available
         workout_plan = plan_data.get('fallback_plan')
         if not workout_plan:
-             # Just in case both are missing
              workout_plan = {}
     
     return render(request, 'gym/view_workout_plan.html', {
@@ -77,9 +113,12 @@ def view_workout_plan(request):
 def ai_diet_plan(request):
     """
     View to handle AI diet plan generation.
-    GET: Display the form to input dietary preferences.
-    POST: Generate the plan using Gemini AI.
+    Checks if user is 'connected' first.
     """
+    # Check connection status
+    if not request.session.get('ai_connected'):
+        return redirect(f"{reverse('connect_ai_tools')}?next=ai_diet_plan")
+
     if request.method == 'POST':
         goal = request.POST.get('goal')
         dietary_restrictions = request.POST.getlist('dietary_restrictions')
@@ -95,9 +134,7 @@ def ai_diet_plan(request):
                 dietary_restrictions=dietary_restrictions
             )
             
-            # Store in session
             request.session['generated_diet_plan'] = plan_data
-            
             messages.success(request, "Your AI-powered diet plan has been generated!")
             return redirect('view_diet_plan')
             
@@ -106,7 +143,7 @@ def ai_diet_plan(request):
             return redirect('ai_diet_plan')
 
     return render(request, 'gym/ai_diet_plan.html', {
-        'api_key_configured': bool(settings.GEMINI_API_KEY)
+        'api_key_configured': True
     })
 
 @login_required

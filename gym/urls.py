@@ -75,6 +75,7 @@ urlpatterns = [
     # ============================================
     # PHASE 2 MODERNIZATION - AI ROUTES
     # ============================================
+    path('ai/connect/', ai_views.connect_ai_tools, name='connect_ai_tools'),
     path('ai/workout/generate/', ai_views.ai_workout_plan, name='ai_workout_plan'),
     path('ai/workout/view/', ai_views.view_workout_plan, name='view_workout_plan'),
     path('ai/diet/generate/', ai_views.ai_diet_plan, name='ai_diet_plan'),
