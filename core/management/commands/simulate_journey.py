@@ -120,13 +120,26 @@ class Command(BaseCommand):
 
         # --- STEP 6: BOOKING SYSTEM ---
         self.stdout.write("\n[STEP 6] Class Booking System")
-        # Create a schedule
+        start_time = timezone.now().time()
+        if start_time:
+            # Set end time 60 mins later
+            import datetime
+            # Combine dummy date to do arithmetic
+            dummy_date = datetime.date.today()
+            dt_start = datetime.datetime.combine(dummy_date, start_time)
+            dt_end = dt_start + datetime.timedelta(minutes=60)
+            end_time = dt_end.time()
+        else:
+            # Fallback
+            end_time = (timezone.now() + timedelta(hours=1)).time()
+
         schedule = ClassSchedule.objects.create(
             tenant=tenant,
             class_name="HIIT Blast",
-            day_of_week=timezone.now().strftime('%A'),
-            start_time=timezone.now().time(),
-            duration_minutes=60,
+            class_type="hiit",
+            day_of_week=0, # Monday
+            start_time=start_time,
+            end_time=end_time, # Calculated manually as model has no duration field
             capacity=20,
             instructor=user # Self-taught for test
         )
@@ -136,7 +149,7 @@ class Command(BaseCommand):
         try:
             booking = ClassBooking.objects.create(
                 member=member,
-                schedule=schedule,
+                class_schedule=schedule,
                 booking_date=timezone.now().date(),
                 status='confirmed'
             )
