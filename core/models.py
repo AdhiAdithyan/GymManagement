@@ -316,3 +316,34 @@ class WhatsAppMessage(models.Model):
     def __str__(self):
         return f"WhatsApp to {self.time_slot} by {self.sent_by} at {self.sent_at}"
 
+
+# Import new model modules for Phase 1 Modernization
+# These models are defined in separate files for better organization
+
+# Payment Gateway Models
+from .payment_models import (
+    PaymentGateway,
+    SubscriptionPayment,
+    PaymentMethod,
+    PaymentWebhook
+)
+
+# Booking System Models
+from .booking_models import (
+    ClassSchedule,
+    ClassBooking,
+    PersonalTrainingSession,
+    BookingSettings
+)
+
+# Gamification Models
+from .gamification_models import (
+    Exercise,
+    WorkoutLog,
+    PersonalBest,
+    Achievement,
+    MemberEngagementScore,
+    Leaderboard,
+    Challenge,
+    ChallengeParticipation
+)

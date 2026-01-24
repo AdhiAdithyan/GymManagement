@@ -218,3 +218,39 @@ TWILIO_ACCOUNT_SID = config('TWILIO_ACCOUNT_SID', default='')
 TWILIO_AUTH_TOKEN = config('TWILIO_AUTH_TOKEN', default='')
 TWILIO_WHATSAPP_NUMBER = config('TWILIO_WHATSAPP_NUMBER', default='whatsapp:+14155238886')
 
+# ============================================
+# PHASE 1 MODERNIZATION - PAYMENT GATEWAYS
+# ============================================
+
+# Stripe Configuration
+STRIPE_PUBLISHABLE_KEY = config('STRIPE_PUBLISHABLE_KEY', default='')
+STRIPE_SECRET_KEY = config('STRIPE_SECRET_KEY', default='')
+STRIPE_WEBHOOK_SECRET = config('STRIPE_WEBHOOK_SECRET', default='')
+
+# Razorpay Configuration
+RAZORPAY_KEY_ID = config('RAZORPAY_KEY_ID', default='')
+RAZORPAY_KEY_SECRET = config('RAZORPAY_KEY_SECRET', default='')
+RAZORPAY_WEBHOOK_SECRET = config('RAZORPAY_WEBHOOK_SECRET', default='')
+
+# ============================================
+# PHASE 2 MODERNIZATION - AI & ANALYTICS
+# ============================================
+
+# Google Gemini AI Configuration
+GEMINI_API_KEY = config('GEMINI_API_KEY', default='')
+
+# ============================================
+# PHASE 3 MODERNIZATION - MONITORING
+# ============================================
+
+# Sentry Error Monitoring (Optional)
+SENTRY_DSN = config('SENTRY_DSN', default='')
+
+if SENTRY_DSN:
+    import sentry_sdk
+    sentry_sdk.init(
+        dsn=SENTRY_DSN,
+        traces_sample_rate=0.1,
+        profiles_sample_rate=0.1,
+    )
+

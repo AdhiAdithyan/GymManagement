@@ -1,0 +1,416 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Payment History{% endblock %}
+
+{% block extra_css %}
+<style>
+    .history-container {
+        max-width: 1200px;
+        margin: 2rem auto;
+        padding: 2rem;
+    }
+
+    .history-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 12px;
+        margin-bottom: 2rem;
+        box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+    }
+
+    .history-header h1 {
+        margin: 0 0 0.5rem 0;
+    }
+
+    .filters-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .filter-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .filter-group label {
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        color: #333;
+    }
+
+    .filter-group input,
+    .filter-group select {
+        padding: 0.75rem;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 1rem;
+    }
+
+    .filter-group input:focus,
+    .filter-group select:focus {
+        outline: none;
+        border-color: #667eea;
+    }
+
+    .btn-filter {
+        background: #667eea;
+        color: white;
+        border: none;
+        padding: 0.75rem 2rem;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+    }
+
+    .btn-filter:hover {
+        background: #5568d3;
+    }
+
+    .btn-reset {
+        background: #6c757d;
+        color: white;
+        border: none;
+        padding: 0.75rem 2rem;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+        margin-left: 0.5rem;
+    }
+
+    .history-table-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .table-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+    }
+
+    .table-header h2 {
+        margin: 0;
+        color: #333;
+    }
+
+    .btn-export {
+        background: #28a745;
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-block;
+    }
+
+    .btn-export:hover {
+        background: #218838;
+    }
+
+    .payment-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .payment-table thead {
+        background: #f8f9fa;
+    }
+
+    .payment-table th {
+        padding: 1rem;
+        text-align: left;
+        font-weight: 600;
+        color: #555;
+        border-bottom: 2px solid #dee2e6;
+    }
+
+    .payment-table td {
+        padding: 1rem;
+        border-bottom: 1px solid #dee2e6;
+    }
+
+    .payment-table tbody tr:hover {
+        background: #f8f9fa;
+    }
+
+    .status-badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+
+    .status-completed {
+        background: #d4edda;
+        color: #155724;
+    }
+
+    .status-pending {
+        background: #fff3cd;
+        color: #856404;
+    }
+
+    .status-failed {
+        background: #f8d7da;
+        color: #721c24;
+    }
+
+    .amount-cell {
+        font-weight: bold;
+        color: #28a745;
+    }
+
+    .pagination {
+        display: flex;
+        justify-content: center;
+        gap: 0.5rem;
+        margin-top: 2rem;
+    }
+
+    .pagination a,
+    .pagination span {
+        padding: 0.5rem 1rem;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        text-decoration: none;
+        color: #333;
+    }
+
+    .pagination a:hover {
+        background: #667eea;
+        color: white;
+        border-color: #667eea;
+    }
+
+    .pagination .current {
+        background: #667eea;
+        color: white;
+        border-color: #667eea;
+    }
+
+    .stats-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        text-align: center;
+    }
+
+    .stat-value {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #667eea;
+    }
+
+    .stat-label {
+        color: #666;
+        margin-top: 0.5rem;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        color: #999;
+    }
+
+    .empty-state svg {
+        width: 100px;
+        height: 100px;
+        margin-bottom: 1rem;
+        opacity: 0.5;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="history-container">
+    <div class="history-header">
+        <h1>📊 Payment History</h1>
+        <p>View all your payment transactions</p>
+    </div>
+
+    <!-- Statistics -->
+    <div class="stats-row">
+        <div class="stat-card">
+            <div class="stat-value">{{ total_payments }}</div>
+            <div class="stat-label">Total Payments</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">₹{{ total_amount|floatformat:2 }}</div>
+            <div class="stat-label">Total Amount</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ completed_payments }}</div>
+            <div class="stat-label">Successful</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ pending_payments }}</div>
+            <div class="stat-label">Pending</div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filters-card">
+        <form method="get" action="">
+            <div class="filter-row">
+                <div class="filter-group">
+                    <label>From Date</label>
+                    <input type="date" name="from_date" value="{{ request.GET.from_date }}">
+                </div>
+                <div class="filter-group">
+                    <label>To Date</label>
+                    <input type="date" name="to_date" value="{{ request.GET.to_date }}">
+                </div>
+                <div class="filter-group">
+                    <label>Status</label>
+                    <select name="status">
+                        <option value="">All Statuses</option>
+                        <option value="completed" {% if request.GET.status=='completed' %}selected{% endif %}>Completed
+                        </option>
+                        <option value="pending" {% if request.GET.status=='pending' %}selected{% endif %}>Pending
+                        </option>
+                        <option value="failed" {% if request.GET.status=='failed' %}selected{% endif %}>Failed</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Payment Method</label>
+                    <select name="method">
+                        <option value="">All Methods</option>
+                        <option value="card" {% if request.GET.method=='card' %}selected{% endif %}>Card</option>
+                        <option value="upi" {% if request.GET.method=='upi' %}selected{% endif %}>UPI</option>
+                        <option value="cash" {% if request.GET.method=='cash' %}selected{% endif %}>Cash</option>
+                    </select>
+                </div>
+            </div>
+            <div>
+                <button type="submit" class="btn-filter">Apply Filters</button>
+                <a href="{% url 'payment_history' %}" class="btn-reset">Reset</a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Payment Table -->
+    <div class="history-table-card">
+        <div class="table-header">
+            <h2>All Transactions</h2>
+            <a href="#" class="btn-export" onclick="window.print(); return false;">📥 Export PDF</a>
+        </div>
+
+        {% if payments %}
+        <table class="payment-table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Invoice #</th>
+                    <th>Description</th>
+                    <th>Amount</th>
+                    <th>Method</th>
+                    <th>Status</th>
+                    <th>Transaction ID</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for payment in payments %}
+                <tr>
+                    <td>{{ payment.payment_date|date:"M d, Y" }}<br>
+                        <small style="color: #999;">{{ payment.payment_date|date:"h:i A" }}</small>
+                    </td>
+                    <td><strong>{{ payment.invoice_number|default:"N/A" }}</strong></td>
+                    <td>{{ payment.subscription.get_plan_display|default:"Membership Payment" }}</td>
+                    <td class="amount-cell">₹{{ payment.amount|floatformat:2 }}</td>
+                    <td>{{ payment.get_payment_method_display }}</td>
+                    <td>
+                        {% if payment.status == 'completed' %}
+                        <span class="status-badge status-completed">✓ Paid</span>
+                        {% elif payment.status == 'pending' %}
+                        <span class="status-badge status-pending">⏳ Pending</span>
+                        {% else %}
+                        <span class="status-badge status-failed">✗ {{ payment.get_status_display }}</span>
+                        {% endif %}
+                    </td>
+                    <td><small>{{ payment.transaction_id|default:"—"|truncatechars:20 }}</small></td>
+                    <td>
+                        {% if payment.status == 'completed' %}
+                        <a href="{% url 'payment_success' payment.id %}" style="color: #667eea; text-decoration: none;">
+                            View Receipt
+                        </a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <!-- Pagination -->
+        {% if is_paginated %}
+        <div class="pagination">
+            {% if page_obj.has_previous %}
+            <a href="?page=1">First</a>
+            <a href="?page={{ page_obj.previous_page_number }}">Previous</a>
+            {% endif %}
+
+            <span class="current">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+
+            {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}">Next</a>
+            <a href="?page={{ page_obj.paginator.num_pages }}">Last</a>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        {% else %}
+        <div class="empty-state">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+            <h3>No Payment History</h3>
+            <p>You haven't made any payments yet.</p>
+            <a href="{% url 'create_payment' %}" style="color: #667eea; text-decoration: none; font-weight: 600;">
+                Make Your First Payment →
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<style media="print">
+    .filters-card,
+    .btn-export,
+    .history-header,
+    .pagination {
+        display: none !important;
+    }
+
+    .history-table-card {
+        box-shadow: none !important;
+    }
+</style>
+{% endblock %}

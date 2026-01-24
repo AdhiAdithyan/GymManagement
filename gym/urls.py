@@ -1,5 +1,7 @@
 from django.urls import path
 from . import views
+from . import payment_views  # Import payment views
+from . import booking_views  # Import booking views
 
 urlpatterns = [
     path('', views.dashboard, name='dashboard'),
@@ -36,4 +38,35 @@ urlpatterns = [
     path('member/videos/', views.member_video_list, name='member_videos'),
     path('member/diet/', views.member_diet_view, name='member_diet'),
     path('member/leave/', views.leave_request_create, name='leave_request'),
+    
+    # ============================================
+    # PHASE 1 MODERNIZATION - PAYMENT ROUTES
+    # ============================================
+    
+    # Member Payment Routes
+    path('payments/', payment_views.payment_dashboard, name='payment_dashboard'),
+    path('payments/create/', payment_views.create_payment, name='create_payment'),
+    path('payments/success/<int:payment_id>/', payment_views.payment_success, name='payment_success'),
+    path('payments/history/', payment_views.payment_history, name='payment_history'),
+    
+    # Admin Payment Routes
+    path('admin/payments/', payment_views.admin_payment_overview, name='admin_payment_overview'),
+    path('admin/payment-settings/', payment_views.payment_gateway_settings, name='payment_gateway_settings'),
+    
+    # Webhook Routes (no authentication required)
+    path('webhooks/stripe/', payment_views.stripe_webhook, name='stripe_webhook'),
+    
+    # ============================================
+    # PHASE 1 MODERNIZATION - BOOKING ROUTES
+    # ============================================
+    
+    # Member Booking Routes
+    path('classes/', booking_views.class_calendar, name='class_calendar'),
+    path('classes/events/', booking_views.get_calendar_events, name='get_calendar_events'),
+    path('classes/book/', booking_views.book_class, name='book_class'),
+    path('bookings/', booking_views.my_bookings, name='my_bookings'),
+    path('bookings/cancel/<int:booking_id>/', booking_views.cancel_booking, name='cancel_booking'),
+    
+    # Admin/Trainer Booking Routes
+    path('admin/schedules/', booking_views.manage_class_schedules, name='manage_class_schedules'),
 ]

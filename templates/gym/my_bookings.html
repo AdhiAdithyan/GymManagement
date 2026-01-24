@@ -1,0 +1,419 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}My Bookings{% endblock %}
+
+{% block extra_css %}
+<style>
+    .bookings-container {
+        max-width: 1200px;
+        margin: 2rem auto;
+        padding: 2rem;
+    }
+
+    .bookings-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 12px;
+        margin-bottom: 2rem;
+        box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+    }
+
+    .bookings-header h1 {
+        margin: 0 0 0.5rem 0;
+    }
+
+    .tabs {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 2rem;
+        border-bottom: 2px solid #e0e0e0;
+    }
+
+    .tab {
+        padding: 1rem 2rem;
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-weight: 600;
+        color: #666;
+        border-bottom: 3px solid transparent;
+        transition: all 0.3s ease;
+    }
+
+    .tab.active {
+        color: #667eea;
+        border-bottom-color: #667eea;
+    }
+
+    .tab:hover {
+        color: #667eea;
+    }
+
+    .tab-content {
+        display: none;
+    }
+
+    .tab-content.active {
+        display: block;
+    }
+
+    .booking-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease;
+    }
+
+    .booking-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .booking-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: start;
+        margin-bottom: 1rem;
+    }
+
+    .class-info h3 {
+        margin: 0 0 0.5rem 0;
+        color: #333;
+    }
+
+    .class-info p {
+        margin: 0.25rem 0;
+        color: #666;
+    }
+
+    .booking-status {
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+
+    .status-confirmed {
+        background: #d4edda;
+        color: #155724;
+    }
+
+    .status-waitlist {
+        background: #fff3cd;
+        color: #856404;
+    }
+
+    .status-cancelled {
+        background: #f8d7da;
+        color: #721c24;
+    }
+
+    .status-completed {
+        background: #d1ecf1;
+        color: #0c5460;
+    }
+
+    .booking-details {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin: 1rem 0;
+        padding: 1rem;
+        background: #f8f9fa;
+        border-radius: 8px;
+    }
+
+    .detail-item {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .detail-label {
+        font-size: 0.85rem;
+        color: #666;
+        margin-bottom: 0.25rem;
+    }
+
+    .detail-value {
+        font-weight: 600;
+        color: #333;
+    }
+
+    .booking-actions {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+
+    .btn {
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        border: none;
+        transition: transform 0.2s ease;
+        text-decoration: none;
+        display: inline-block;
+    }
+
+    .btn:hover {
+        transform: scale(1.05);
+    }
+
+    .btn-cancel {
+        background: #dc3545;
+        color: white;
+    }
+
+    .btn-cancel:hover {
+        background: #c82333;
+    }
+
+    .btn-reschedule {
+        background: #ffc107;
+        color: #333;
+    }
+
+    .btn-reschedule:hover {
+        background: #e0a800;
+    }
+
+    .btn-view {
+        background: #667eea;
+        color: white;
+    }
+
+    .btn-view:hover {
+        background: #5568d3;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        color: #999;
+    }
+
+    .empty-state svg {
+        width: 100px;
+        height: 100px;
+        margin-bottom: 1rem;
+        opacity: 0.5;
+    }
+
+    .empty-state h3 {
+        color: #666;
+        margin-bottom: 0.5rem;
+    }
+
+    .empty-state a {
+        color: #667eea;
+        text-decoration: none;
+        font-weight: 600;
+    }
+
+    .countdown {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        background: #e7f3ff;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        color: #667eea;
+        font-weight: 600;
+    }
+
+    .instructor-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        background: #f8f9fa;
+        border-radius: 20px;
+        font-size: 0.9rem;
+    }
+
+    .instructor-avatar {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background: #667eea;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="bookings-container">
+    <div class="bookings-header">
+        <h1>📋 My Bookings</h1>
+        <p>Manage your class bookings and schedule</p>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+        <button class="tab active" onclick="showTab('upcoming')">
+            Upcoming ({{ upcoming_bookings|length }})
+        </button>
+        <button class="tab" onclick="showTab('past')">
+            Past Classes ({{ past_bookings|length }})
+        </button>
+    </div>
+
+    <!-- Upcoming Bookings -->
+    <div id="upcoming" class="tab-content active">
+        {% if upcoming_bookings %}
+        {% for booking in upcoming_bookings %}
+        <div class="booking-card">
+            <div class="booking-header">
+                <div class="class-info">
+                    <h3>{{ booking.class_schedule.class_name }}</h3>
+                    <p>
+                        <span class="instructor-badge">
+                            <div class="instructor-avatar">
+                                {{ booking.class_schedule.instructor.first_name|first }}{{
+                                booking.class_schedule.instructor.last_name|first }}
+                            </div>
+                            {{ booking.class_schedule.instructor.get_full_name }}
+                        </span>
+                    </p>
+                </div>
+                <div>
+                    {% if booking.status == 'confirmed' %}
+                    <span class="booking-status status-confirmed">✓ Confirmed</span>
+                    {% elif booking.status == 'waitlist' %}
+                    <span class="booking-status status-waitlist">⏳ Waitlisted</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="booking-details">
+                <div class="detail-item">
+                    <span class="detail-label">Date</span>
+                    <span class="detail-value">{{ booking.booking_date|date:"l, M d, Y" }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Time</span>
+                    <span class="detail-value">
+                        {{ booking.class_schedule.start_time|time:"g:i A" }} - {{
+                        booking.class_schedule.end_time|time:"g:i A" }}
+                    </span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Type</span>
+                    <span class="detail-value">{{ booking.class_schedule.get_class_type_display }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Booked</span>
+                    <span class="detail-value">{{ booking.booked_at|date:"M d, g:i A" }}</span>
+                </div>
+            </div>
+
+            {% if booking.class_schedule.description %}
+            <p style="color: #666; margin: 1rem 0;">{{ booking.class_schedule.description }}</p>
+            {% endif %}
+
+            <div class="booking-actions">
+                <form method="post" action="{% url 'cancel_booking' booking.id %}" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-cancel" onclick="return confirm('Cancel this booking?')">
+                        Cancel Booking
+                    </button>
+                </form>
+                <a href="{% url 'class_calendar' %}" class="btn btn-reschedule">
+                    Reschedule
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <div class="empty-state">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+            <h3>No Upcoming Bookings</h3>
+            <p>You don't have any upcoming class bookings.</p>
+            <a href="{% url 'class_calendar' %}">Browse Classes →</a>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Past Bookings -->
+    <div id="past" class="tab-content">
+        {% if past_bookings %}
+        {% for booking in past_bookings %}
+        <div class="booking-card">
+            <div class="booking-header">
+                <div class="class-info">
+                    <h3>{{ booking.class_schedule.class_name }}</h3>
+                    <p>{{ booking.class_schedule.instructor.get_full_name }}</p>
+                </div>
+                <div>
+                    {% if booking.checked_in_at %}
+                    <span class="booking-status status-completed">✓ Attended</span>
+                    {% elif booking.status == 'cancelled' %}
+                    <span class="booking-status status-cancelled">✗ Cancelled</span>
+                    {% else %}
+                    <span class="booking-status" style="background: #e0e0e0; color: #666;">Missed</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="booking-details">
+                <div class="detail-item">
+                    <span class="detail-label">Date</span>
+                    <span class="detail-value">{{ booking.booking_date|date:"M d, Y" }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Time</span>
+                    <span class="detail-value">
+                        {{ booking.class_schedule.start_time|time:"g:i A" }}
+                    </span>
+                </div>
+                {% if booking.checked_in_at %}
+                <div class="detail-item">
+                    <span class="detail-label">Checked In</span>
+                    <span class="detail-value">{{ booking.checked_in_at|date:"g:i A" }}</span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <div class="empty-state">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path
+                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+            <h3>No Past Bookings</h3>
+            <p>Your class history will appear here.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+    function showTab(tabName) {
+        // Hide all tabs
+        document.querySelectorAll('.tab-content').forEach(content => {
+            content.classList.remove('active');
+        });
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.classList.remove('active');
+        });
+
+        // Show selected tab
+        document.getElementById(tabName).classList.add('active');
+        event.target.classList.add('active');
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,396 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Payment Gateway Settings{% endblock %}
+
+{% block extra_css %}
+<style>
+    .settings-container {
+        max-width: 1000px;
+        margin: 2rem auto;
+        padding: 2rem;
+    }
+
+    .settings-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 12px;
+        margin-bottom: 2rem;
+        box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+    }
+
+    .settings-header h1 {
+        margin: 0 0 0.5rem 0;
+    }
+
+    .gateway-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .gateway-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease;
+    }
+
+    .gateway-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .gateway-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+
+    .gateway-logo {
+        font-size: 2rem;
+    }
+
+    .gateway-status {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+
+    .status-active {
+        background: #d4edda;
+        color: #155724;
+    }
+
+    .status-inactive {
+        background: #f8d7da;
+        color: #721c24;
+    }
+
+    .status-test {
+        background: #fff3cd;
+        color: #856404;
+    }
+
+    .gateway-info {
+        margin: 1rem 0;
+    }
+
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid #e0e0e0;
+    }
+
+    .info-row:last-child {
+        border-bottom: none;
+    }
+
+    .info-label {
+        color: #666;
+        font-weight: 600;
+    }
+
+    .info-value {
+        color: #333;
+    }
+
+    .btn-configure {
+        background: #667eea;
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+        width: 100%;
+        margin-top: 1rem;
+    }
+
+    .btn-configure:hover {
+        background: #5568d3;
+    }
+
+    .btn-deactivate {
+        background: #dc3545;
+    }
+
+    .btn-deactivate:hover {
+        background: #c82333;
+    }
+
+    .config-form {
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        margin-bottom: 2rem;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        color: #333;
+        font-weight: 600;
+    }
+
+    .form-group input,
+    .form-group select {
+        width: 100%;
+        padding: 0.75rem;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 1rem;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus {
+        outline: none;
+        border-color: #667eea;
+    }
+
+    .form-group small {
+        color: #666;
+        font-size: 0.85rem;
+        display: block;
+        margin-top: 0.25rem;
+    }
+
+    .checkbox-group {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .checkbox-group input[type="checkbox"] {
+        width: auto;
+    }
+
+    .btn-submit {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        padding: 1rem 2rem;
+        border-radius: 8px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        cursor: pointer;
+        width: 100%;
+    }
+
+    .btn-submit:hover {
+        transform: scale(1.02);
+    }
+
+    .help-card {
+        background: #e7f3ff;
+        border-left: 4px solid #667eea;
+        padding: 1rem;
+        border-radius: 4px;
+        margin-top: 2rem;
+    }
+
+    .help-card h3 {
+        margin: 0 0 0.5rem 0;
+        color: #333;
+    }
+
+    .help-card p {
+        margin: 0.5rem 0;
+        color: #555;
+        font-size: 0.9rem;
+    }
+
+    .help-card a {
+        color: #667eea;
+        text-decoration: none;
+        font-weight: 600;
+    }
+
+    .webhook-url {
+        background: #f8f9fa;
+        padding: 1rem;
+        border-radius: 8px;
+        border: 2px dashed #dee2e6;
+        font-family: monospace;
+        word-break: break-all;
+    }
+
+    .copy-btn {
+        background: #28a745;
+        color: white;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 0.9rem;
+        margin-top: 0.5rem;
+    }
+
+    .copy-btn:hover {
+        background: #218838;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="settings-container">
+    <div class="settings-header">
+        <h1>⚙️ Payment Gateway Settings</h1>
+        <p>Configure payment gateways for your gym</p>
+    </div>
+
+    <!-- Existing Gateways -->
+    {% if gateways %}
+    <h2 style="margin-bottom: 1rem;">Configured Gateways</h2>
+    <div class="gateway-grid">
+        {% for gateway in gateways %}
+        <div class="gateway-card">
+            <div class="gateway-header">
+                <div class="gateway-logo">
+                    {% if gateway.gateway_type == 'stripe' %}💳
+                    {% elif gateway.gateway_type == 'razorpay' %}💰
+                    {% else %}💵{% endif %}
+                </div>
+                <div>
+                    {% if gateway.is_active %}
+                    {% if gateway.is_test_mode %}
+                    <span class="gateway-status status-test">Test Mode</span>
+                    {% else %}
+                    <span class="gateway-status status-active">Active</span>
+                    {% endif %}
+                    {% else %}
+                    <span class="gateway-status status-inactive">Inactive</span>
+                    {% endif %}
+                </div>
+            </div>
+            <h3>{{ gateway.get_gateway_type_display }}</h3>
+            <div class="gateway-info">
+                <div class="info-row">
+                    <span class="info-label">API Key</span>
+                    <span class="info-value">{{ gateway.api_key|truncatechars:20 }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Created</span>
+                    <span class="info-value">{{ gateway.created_at|date:"M d, Y" }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Mode</span>
+                    <span class="info-value">
+                        {% if gateway.is_test_mode %}Test{% else %}Live{% endif %}
+                    </span>
+                </div>
+            </div>
+            <button class="btn-configure" onclick="editGateway('{{ gateway.gateway_type }}')">
+                Edit Configuration
+            </button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Add New Gateway Form -->
+    <div class="config-form">
+        <h2 style="margin-bottom: 1.5rem;">{% if gateways %}Add New Gateway{% else %}Configure Payment Gateway{% endif
+            %}</h2>
+
+        <form method="post" action="{% url 'payment_gateway_settings' %}">
+            {% csrf_token %}
+
+            <div class="form-group">
+                <label for="gateway_type">Gateway Type *</label>
+                <select name="gateway_type" id="gateway_type" required>
+                    <option value="">Select Gateway</option>
+                    <option value="stripe">Stripe</option>
+                    <option value="razorpay">Razorpay</option>
+                    <option value="paypal">PayPal</option>
+                </select>
+                <small>Choose your preferred payment gateway</small>
+            </div>
+
+            <div class="form-group">
+                <label for="api_key">API Key / Publishable Key *</label>
+                <input type="text" name="api_key" id="api_key" placeholder="pk_test_..." required>
+                <small>Your publishable/public API key</small>
+            </div>
+
+            <div class="form-group">
+                <label for="api_secret">API Secret / Secret Key *</label>
+                <input type="password" name="api_secret" id="api_secret" placeholder="sk_test_..." required>
+                <small>Your secret API key (keep this secure!)</small>
+            </div>
+
+            <div class="form-group">
+                <label for="webhook_secret">Webhook Secret</label>
+                <input type="password" name="webhook_secret" id="webhook_secret" placeholder="whsec_...">
+                <small>Webhook signing secret for verifying events</small>
+            </div>
+
+            <div class="form-group">
+                <div class="checkbox-group">
+                    <input type="checkbox" name="is_test_mode" id="is_test_mode" checked>
+                    <label for="is_test_mode" style="margin: 0;">Test Mode</label>
+                </div>
+                <small>Enable for testing with test API keys</small>
+            </div>
+
+            <button type="submit" class="btn-submit">
+                💾 Save Gateway Configuration
+            </button>
+        </form>
+    </div>
+
+    <!-- Webhook URL Information -->
+    <div class="help-card">
+        <h3>🔗 Webhook Configuration</h3>
+        <p>Add this webhook URL to your payment gateway dashboard:</p>
+        <div class="webhook-url">
+            {{ request.scheme }}://{{ request.get_host }}{% url 'stripe_webhook' %}
+        </div>
+        <button class="copy-btn" onclick="copyWebhookUrl()">📋 Copy URL</button>
+
+        <p style="margin-top: 1rem;"><strong>Instructions:</strong></p>
+        <ul style="margin: 0.5rem 0; padding-left: 1.5rem;">
+            <li>Go to your payment gateway dashboard</li>
+            <li>Navigate to Webhooks/Developers section</li>
+            <li>Add the above URL as a new webhook endpoint</li>
+            <li>Select events: payment_intent.succeeded, payment_intent.failed</li>
+            <li>Copy the webhook secret and paste it above</li>
+        </ul>
+    </div>
+
+    <!-- Help Links -->
+    <div class="help-card" style="margin-top: 1rem;">
+        <h3>📚 Documentation</h3>
+        <p>
+            <a href="https://stripe.com/docs/keys" target="_blank">Stripe API Keys →</a><br>
+            <a href="https://razorpay.com/docs/api/" target="_blank">Razorpay API Keys →</a><br>
+            <a href="https://stripe.com/docs/webhooks" target="_blank">Stripe Webhooks →</a>
+        </p>
+    </div>
+</div>
+
+<script>
+    function copyWebhookUrl() {
+        const url = '{{ request.scheme }}://{{ request.get_host }}{% url "stripe_webhook" %}';
+        navigator.clipboard.writeText(url).then(() => {
+            alert('Webhook URL copied to clipboard!');
+        });
+    }
+
+    function editGateway(type) {
+        document.getElementById('gateway_type').value = type;
+        window.scrollTo({ top: document.querySelector('.config-form').offsetTop - 100, behavior: 'smooth' });
+    }
+</script>
+{% endblock %}

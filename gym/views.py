@@ -57,6 +57,8 @@ def trainer_dashboard(request):
     }
     return render(request, 'gym/trainer_dashboard.html', context)
 
+@login_required
+@role_required(['member'])
 def member_dashboard(request):
     member = request.user.member_profile
     today = timezone.now().date()
