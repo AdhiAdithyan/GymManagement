@@ -1,4 +1,4 @@
-# Gym Management System (v3.5.0)
+# ERA FITNESS STUDIO (v3.5.0)
 
 A comprehensive, multi-tenant enabled Gym Management System built with Django, designed for visual excellence and automated operations.
 

@@ -1,4 +1,4 @@
-# 📄 Gym Management System - Technical Documentation
+# 📄 ERA FITNESS STUDIO - Technical Documentation
 
 This document provides a comprehensive overview of the system architecture, database models, and functional modules of the Gym Management System.
 
